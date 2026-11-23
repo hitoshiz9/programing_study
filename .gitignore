@@ -42,3 +42,6 @@ next-env.d.ts
 
 # copied from node_modules by scripts/copy-pyodide.mjs
 /public/pyodide/
+
+# エージェントの作業用コピー
+/.claude/
