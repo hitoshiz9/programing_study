@@ -105,3 +105,41 @@ test("保存データ: 壊れていても最初の状態に戻り、落ちない
   const ok = { xp: 5, done: ["a"], lastDay: "2026-01-01", streak: 2, badges: ["first"] };
   assert.deepEqual(parse(JSON.stringify(ok)), ok);
 });
+
+// ---- くわしい説明 ----
+import { EXPLAIN, EXPLAINED_CHAPTERS } from "../lib/explain.ts";
+
+// 東大教材の各章の説明文の文字数(空白を除く。2026-11-24 に測定。コード部分は除く)
+const REF_PROSE: Record<string, number> = {
+  "1-1": 3466, "1-2": 5424, "1-3": 2768, "1-4": 3470, "2-1": 5836, "2-2": 8142, "2-3": 2892, "3-1": 2620, "3-2": 8990,
+  "3-3": 2773, "4-2": 3041, "5-1": 1248, "5-3": 5475, "6-1": 2596, "6-2": 2848, "6-3": 4290, "7-1": 7652, "7-2": 4923,
+};
+const chars = (s: string) => s.replace(/\s+/g, "").length;
+const proseOf = (ref: string) =>
+  ALL_WRITE.filter((l) => l.ref === ref).reduce(
+    (n, l) => n + chars(l.intro.join("")) + (EXPLAIN[l.id] ?? []).reduce((m, b) => m + ("p" in b ? chars(b.p) : "h" in b ? chars(b.h) : 0), 0),
+    0,
+  );
+
+for (const ref of EXPLAINED_CHAPTERS) {
+  test(`説明の量: ${ref} が東大教材の9割以上`, () => {
+    assert.ok(proseOf(ref) >= REF_PROSE[ref] * 0.9, `${proseOf(ref)} 字 / 必要 ${Math.ceil(REF_PROSE[ref] * 0.9)} 字`);
+  });
+}
+
+test("説明: どのレッスンにも属している", () => {
+  const ids = new Set(ALL_WRITE.map((l) => l.id));
+  for (const id of Object.keys(EXPLAIN)) assert.ok(ids.has(id), id);
+});
+
+for (const [id, blocks] of Object.entries(EXPLAIN)) {
+  blocks.forEach((b, i) => {
+    if (!("code" in b)) return;
+    test(`説明の例 ${id}#${i}: 表示している結果が実際の結果と一致する`, async () => {
+      await py.loadPackagesFromImports(b.code, { messageCallback: () => {} });
+      const r = runWith(py, b.code);
+      assert.equal(r.error, null);
+      assert.equal(r.out.trimEnd(), b.out);
+    });
+  });
+}

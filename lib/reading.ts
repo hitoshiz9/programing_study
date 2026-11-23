@@ -19,7 +19,8 @@ export const READ_LESSONS: ReadLesson[] = [
     code: "x = 1\nprint(x)\nx = 5\nprint(x)",
     choices: ["5\n5", "1\n5", "1\n1"],
     answer: 1,
-    explain: "1行目の print の時点では x は 1、あとで 5 に変わってから2回目の print が動きます。",
+    explain:
+      "プログラムは上から1行ずつ動きます。2行目の print が動いた時点では、x は 1 を指しているので 1 が表示されます。そのあと3行目で x に 5 が代入しなおされ、4行目の print では 5 が表示されます。あとから代入しても、すでに表示されたものが書きかわることはありません。「その行を実行した瞬間に、名前が何を指しているか」を追いかけるのがコツです。",
     xp: 10,
     ref: "1-2",
   },
@@ -30,7 +31,8 @@ export const READ_LESSONS: ReadLesson[] = [
     code: "print(7 // 2)\nprint(7 % 2)",
     choices: ["3\n1", "3.5\n1", "3\n0"],
     answer: 0,
-    explain: "7 ÷ 2 は 3 あまり 1。// は 3、% は 1 です。",
+    explain:
+      "7 ÷ 2 は 3 あまり 1 です。// は商（整数の部分）なので 3、% はあまりなので 1 になります。3.5 を選んだ人は、/（ふつうのわり算）と // を取りちがえています。/ は小数の答え、// は整数の答え、と区別して覚えましょう。あまりが 1 なので、7 は奇数だということも分かります。",
     xp: 10,
     ref: "1-1",
   },
@@ -41,7 +43,8 @@ export const READ_LESSONS: ReadLesson[] = [
     code: "n = 10\nn = n + 3\nn = n * 2\nprint(n)",
     choices: ["20", "23", "26"],
     answer: 2,
-    explain: "10 → 10 + 3 = 13 → 13 × 2 = 26 です。",
+    explain:
+      "1行ずつ追いかけます。1行目のあと n は 10。2行目は右側の n + 3 を先に計算して 13、それに n という名前を付けなおします。3行目も同じように 13 × 2 = 26 です。20 を選んだ人は2行目を飛ばし、23 を選んだ人は「n * 2」を「3 を足す前の 10」で計算しています。= の右側は、その時点の値で先に計算される、と覚えておきましょう。",
     xp: 10,
     ref: "1-2",
   },
@@ -195,7 +198,8 @@ export const READ_LESSONS: ReadLesson[] = [
     code: "def double(x):\n    return x * 2\n\nprint(double(3) + double(4))",
     choices: ["14", "7", "68"],
     answer: 0,
-    explain: "double(3) は 6、double(4) は 8。6 + 8 = 14 です。",
+    explain:
+      "double(3) を呼ぶと、関数の中で x が 3 になり、3 * 2 = 6 が返ります。double(4) も同じように 8 が返ります。返ってきた値は、その場所にふつうの数として入るので、6 + 8 = 14 です。68 を選んだ人は、6 と 8 を文字としてつなげています。return が返しているのは数なので、+ は足し算になります。",
     xp: 15,
     ref: "1-2",
   },
@@ -206,7 +210,8 @@ export const READ_LESSONS: ReadLesson[] = [
     code: "def f(x):\n    print(x + 1)\n\nresult = f(2)\nprint(result)",
     choices: ["3\n3", "None", "3\nNone"],
     answer: 2,
-    explain: "f(2) の中の print で 3 が出ます。return がない関数は None（何もない）を返すので、result は None です。",
+    explain:
+      "f(2) を呼ぶと、関数の中の print が動いて 3 が表示されます。ここまでは見たとおりです。ポイントは次の行で、f には return がないので、関数は None（「何もない」という意味の特別な値）を返します。そのため result は None になり、最後の print で None と表示されます。「画面に出す（print）」と「結果を返す（return）」は別のこと、と覚えておきましょう。",
     xp: 15,
     ref: "1-2",
   },
