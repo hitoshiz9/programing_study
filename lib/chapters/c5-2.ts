@@ -27,7 +27,7 @@ export const chapter: Chapter = {
       title: "自分のモジュールを作る",
       intro: [
         "Python のコードだけを書いた、名前が .py で終わるファイルをモジュールファイルといいます。greet52.py というファイルを作ると、import greet52 で読み込めます。モジュールの名前は、ファイル名から .py を取ったものです。",
-        "このアプリでは、コードの中で open を使って .py ファイルを書き、そのあと import します。最後の2行の準備は、作り直したファイルを毎回読み込み直すためのものです。",
+        "このアプリでは、コードの中で open を使って .py ファイルを書き、そのあと import します。import の直前にある2行の準備は、作り直したファイルを毎回読み込み直すためのものです。",
       ],
       example: 'import importlib, sys\n\nwith open("hi52.py", "w", encoding="utf-8") as f:\n    f.write("NAME = \\"ぴよ\\"\\n")\n\nimportlib.invalidate_caches()\nsys.modules.pop("hi52", None)\nimport hi52\nprint(hi52.NAME)',
       task: "モジュールファイル greet52.py の中の関数 hello(name) を完成させよう。hello(\"ミケ\") が「こんにちは、ミケさん」を返すようにします（pass の行を書きかえます）。",
@@ -59,7 +59,7 @@ export const chapter: Chapter = {
       id: "l52-path",
       title: "モジュールを置く場所",
       intro: [
-        "import は、決まった場所の中からモジュールファイルを探します。その一覧が sys.path というリストで、最初のほうに「今いるディレクトリ」が入っています。",
+        "import は、決まった場所の中からモジュールファイルを探します。その一覧が sys.path というリストです。python ファイル名 で実行したときは、いちばん最初にそのファイルがあるディレクトリが入ります（このアプリや対話モードでは、今いるディレクトリが入ります）。",
         "ほかのディレクトリにあるモジュールを読みたいときは、sys.path.append(\"ディレクトリ\") で、探す場所を足します。",
       ],
       example: 'import sys\nprint(type(sys.path))',

@@ -355,7 +355,7 @@ export const chapter: Chapter = {
       { p: "Python では #!/usr/bin/env python3 と書くのが標準的です。env は、うしろに書いた名前（ここでは python3）のコマンドを探して実行するコマンドです。こう書いておくと、Python がどこにインストールされていても動きます。実行する許可を付けておけば、python3 と打たずに ./スクリプト名 だけで実行できるようになります。" },
       { p: "shebang と文字コード宣言の両方を書くときは、shebang が1行目、文字コード宣言が2行目です。文字コード宣言は1行目か2行目に書けばよいことになっています。" },
       { code: 'import runpy\n\nsource = """#!/usr/bin/env python3\n# -*- coding: shift_jis -*-\nprint("2行の宣言つき")\n"""\nwith open("ex_cmd_e.py", "w", encoding="shift_jis") as f:\n    f.write(source)\nrunpy.run_path("ex_cmd_e.py", run_name="__main__")', out: "2行の宣言つき" },
-      { p: "Windows では shebang は使われませんが、書いてあってもただのコメントとして読み飛ばされるので、害はありません。" },
+      { p: "Windows では、python コマンドで直接実行したときはただのコメントとして読み飛ばされます。ただし py コマンド（Windows 用の Python ランチャー）で実行したときは、shebang を見てどの Python で動かすかを決めるので、Windows でも書いておく意味があります。" },
     ],
   },
   topics: [
