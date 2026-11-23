@@ -1,7 +1,7 @@
 # 各リポジトリの .github/workflows/security.yml にコピーして使う（STG-repo/PRD-repo へのPRでも実行）
 # Branch protection で "security" ジョブを必須にすると、合格しないとマージできない。
 name: security
-on: [pull_request, push]
+on: [pull_request, push, workflow_dispatch] # 手動実行では履歴全体を検査する
 permissions: { contents: read, pull-requests: read } # gitleaks-actionがPRのコミット一覧を読むのに必要
 jobs:
   security:
