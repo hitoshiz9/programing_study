@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { CHAPTERS, chapterUrl, LESSONS, type Lesson } from "@/lib/lessons";
+import { chapterLabel, chapterUrl, LESSONS, type Lesson } from "@/lib/lessons";
 import { READ_LESSONS, type ReadLesson } from "@/lib/reading";
 import { ML_LESSONS } from "@/lib/ml";
 import { EXPLAIN, type Block } from "@/lib/explain";
@@ -142,7 +142,7 @@ export default function App() {
               <li key={l.id}>
                 {cur.stage !== "read" && l.ref !== stage.lessons[n - 1]?.ref && (
                   <p className="mt-3 mb-1 px-1 text-xs font-bold text-stone-500">
-                    {l.ref} {CHAPTERS[l.ref]}
+                    {chapterLabel(l.ref)}
                   </p>
                 )}
                 <button
@@ -223,7 +223,7 @@ function ChapterLink({ refId }: { refId: string }) {
       rel="noopener noreferrer"
       className="mt-3 inline-block text-sm text-sky-700 underline hover:text-sky-900"
     >
-      📘 もっと詳しく：東大教材「{refId} {CHAPTERS[refId]}」を読む（別タブで開きます）
+      📘 もっと詳しく：東大教材「{chapterLabel(refId)}」を読む（別タブで開きます）
     </a>
   );
 }
@@ -269,9 +269,23 @@ function Example({ code }: { code: string }) {
       </button>
       {out && (
         <pre className="mt-1 overflow-x-auto whitespace-pre-wrap rounded-lg bg-stone-700 p-3 font-mono text-sm text-green-200">
-          {out.error ?? (out.out || "(何も表示されていません)")}
+          {out.error ?? (out.out || (out.images?.length ? "(グラフ)" : "(何も表示されていません)"))}
         </pre>
       )}
+      {out && <Figures images={out.images} />}
+    </div>
+  );
+}
+
+// matplotlib で描いたグラフ(PNG)を表示する
+function Figures({ images }: { images?: string[] }) {
+  if (!images?.length) return null;
+  return (
+    <div className="mt-2 space-y-2">
+      {images.map((src, i) => (
+        // eslint-disable-next-line @next/next/no-img-element -- 実行のたびに作られる画像なので next/image は使わない
+        <img key={i} src={`data:image/png;base64,${src}`} alt={`グラフ ${i + 1}`} className="max-w-full rounded-lg border border-stone-200 bg-white" />
+      ))}
     </div>
   );
 }
@@ -491,6 +505,7 @@ function WriteView({
           {result.r.error && (
             <pre className="mt-2 overflow-x-auto whitespace-pre-wrap rounded-lg bg-red-50 p-3 font-mono text-sm text-red-800">{result.r.error}</pre>
           )}
+          <Figures images={result.r.images} />
           {result.ok && <NextButton onNext={onNext} />}
         </section>
       )}

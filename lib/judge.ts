@@ -1,6 +1,6 @@
 import type { Lesson } from "./lessons";
 
-export type RunResult = { out: string; testOut: string; error: string | null; timedOut?: boolean };
+export type RunResult = { out: string; testOut: string; error: string | null; timedOut?: boolean; images?: string[] };
 
 // 行末の空白と前後の改行の違いは気にしない
 const norm = (s: string) =>

@@ -1,6 +1,6 @@
 // pyodide の実行ファイルを public/pyodide に置く(アプリが動くときに外部サイトから読み込まないため)。
 // 1) 本体は node_modules からコピーする。
-// 2) 機械学習の部品(numpy・pandas・scikit-learn と、それが使う部品)は、公式の配布場所からダウンロードし、
+// 2) 機械学習とグラフの部品(numpy・pandas・scikit-learn・matplotlib と、それが使う部品)は、公式の配布場所からダウンロードし、
 //    pyodide-lock.json に書かれた SHA-256(指紋)と一致するものだけを置く。
 import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -23,7 +23,7 @@ const visit = (name) => {
   need.add(name);
   lock[name].depends.forEach(visit);
 };
-["numpy", "pandas", "scikit-learn"].forEach(visit);
+["numpy", "pandas", "scikit-learn", "matplotlib"].forEach(visit);
 
 for (const name of need) {
   const { file_name, sha256: want } = lock[name];

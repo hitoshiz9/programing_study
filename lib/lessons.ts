@@ -1,4 +1,5 @@
 import { EXTRA } from "./extra.ts";
+import { CHAPTER_ORDER, MODULES } from "./chapters/index.ts";
 
 export type Lesson = {
   id: string;
@@ -39,7 +40,14 @@ export const CHAPTERS: Record<string, string> = {
   "7-2": "scikit-learnライブラリ",
 };
 
-export const chapterUrl = (ref: string) => `https://utokyo-ipp.github.io/${ref.split("-")[0]}/${ref}.html`;
+// 章ファイル(lib/chapters)の章の名前と、教材のページの場所
+for (const m of MODULES) CHAPTERS[m.ref] = m.title;
+const URLS: Record<string, string> = Object.fromEntries(MODULES.map((m) => [m.ref, m.url]));
+
+// 画面に出す章の名前(付録は記号を出さない)
+export const chapterLabel = (ref: string) => (ref.startsWith("A-") ? CHAPTERS[ref] : `${ref} ${CHAPTERS[ref]}`);
+
+export const chapterUrl = (ref: string) => URLS[ref] ?? `https://utokyo-ipp.github.io/${ref.split("-")[0]}/${ref}.html`;
 
 const ALL: Omit<Lesson, "ref">[] = [
   {
@@ -1038,12 +1046,22 @@ const ORDER: [string, string[]][] = [
   ["6-3", ["class", "counter"]],
 ];
 
-export const LESSONS: Lesson[] = ORDER.flatMap(([ref, ids]) =>
-  ids.map((id) => {
-    const l = [...ALL, ...EXTRA].find((x) => x.id === id);
-    if (!l) throw new Error(`レッスンがありません: ${id}`);
-    return { ...l, ref };
-  }),
-);
-// 並び順に入れ忘れたレッスンがあれば、すぐ気づけるようにする
-if (LESSONS.length !== ALL.length + EXTRA.length) throw new Error("ORDER に入っていないレッスンがあります");
+// 章ファイルで並びが決まっている章は、そちらの並びを使う(既存の問題も、そこで並べ直す)
+const WRITE_MODS = MODULES.filter((m) => m.stage === "write" && m.order.length > 0);
+const POOL = [...ALL, ...EXTRA, ...WRITE_MODS.flatMap((m) => m.lessons)];
+const SEQ = new Map<string, string[]>(ORDER);
+for (const m of WRITE_MODS) SEQ.set(m.ref, m.order);
+const rank = (ref: string) => CHAPTER_ORDER.indexOf(ref);
+
+export const LESSONS: Lesson[] = [...SEQ]
+  .sort((a, b) => rank(a[0]) - rank(b[0]))
+  .flatMap(([ref, ids]) =>
+    ids.map((id) => {
+      const l = POOL.find((x) => x.id === id);
+      if (!l) throw new Error(`レッスンがありません: ${id}`);
+      return { ...l, ref };
+    }),
+  );
+// 並びに入れ忘れたレッスンや、2回入っているレッスンがあれば、すぐ気づけるようにする
+if (new Set(LESSONS.map((l) => l.id)).size !== LESSONS.length) throw new Error("同じレッスンが2回並んでいます");
+if (LESSONS.length !== POOL.length) throw new Error("並びに入っていないレッスンがあります");

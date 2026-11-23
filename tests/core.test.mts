@@ -8,6 +8,10 @@ import { READ_LESSONS } from "../lib/reading.ts";
 import { ML_LESSONS } from "../lib/ml.ts";
 import { resolve } from "node:path";
 import { complete, EMPTY, levelOf, parse } from "../lib/progress.ts";
+import { MODULES } from "../lib/chapters/index.ts";
+
+// 章ファイルに書いた目標(教材の節の数・説明文の字数)
+const MOD = (ref: string) => MODULES.find((m) => m.ref === ref);
 
 // 公開版と同じく public/pyodide の部品を使う(機械学習の部品もここにある)
 const py = await loadPyodide({ indexURL: resolve("public/pyodide") + "/" });
@@ -123,7 +127,8 @@ const proseOf = (ref: string) =>
 
 for (const ref of EXPLAINED_CHAPTERS) {
   test(`説明の量: ${ref} が東大教材の9割以上`, () => {
-    assert.ok(proseOf(ref) >= REF_PROSE[ref] * 0.9, `${proseOf(ref)} 字 / 必要 ${Math.ceil(REF_PROSE[ref] * 0.9)} 字`);
+    const need = Math.ceil((REF_PROSE[ref] ?? MOD(ref)!.refProse) * 0.9);
+    assert.ok(proseOf(ref) >= need, `${proseOf(ref)} 字 / 必要 ${need} 字`);
   });
 }
 
@@ -153,7 +158,7 @@ const REF_SECTIONS: Record<string, number> = { "1-1": 14 + 1, "1-2": 11 + 3, "1-
 for (const ref of EXPLAINED_CHAPTERS) {
   test(`省略なし: ${ref} の節がすべて、問題と説明で扱われている`, () => {
     const topics = TOPICS[ref] ?? [];
-    assert.equal(topics.length, REF_SECTIONS[ref], "節の数が教材と合いません");
+    assert.equal(topics.length, REF_SECTIONS[ref] ?? MOD(ref)!.refSections, "節の数が教材と合いません");
     const read = new Map(READ_LESSONS.map((l) => [l.id, l]));
     const write = new Set(ALL_WRITE.map((l) => l.id));
     for (const [section, ids] of topics) {
@@ -164,3 +169,23 @@ for (const ref of EXPLAINED_CHAPTERS) {
     }
   });
 }
+
+test("章ファイル: 説明の id がほかの章と重ならず、どれも問題に属している", () => {
+  const seen = new Set<string>();
+  for (const m of MODULES)
+    for (const id of Object.keys(m.explain)) {
+      assert.ok(!seen.has(id), `${m.ref}: 説明 ${id} が重複しています`);
+      seen.add(id);
+    }
+});
+
+test("グラフ: matplotlib で描いた図が画像として取り出され、出力に注意書きが混ざらない", async () => {
+  const code = 'import matplotlib.pyplot as plt\nplt.plot([1, 2, 3], [2, 4, 1])\nplt.title("test")\nplt.show()\nprint("ok")';
+  await py.loadPackagesFromImports(code, { messageCallback: () => {} });
+  const r = runWith(py, code);
+  assert.equal(r.error, null);
+  assert.equal(r.out.trim(), "ok");
+  assert.equal(r.images.length, 1);
+  assert.ok(Buffer.from(r.images[0], "base64").subarray(1, 4).toString() === "PNG");
+  assert.equal(runWith(py, "print(1)").images.length, 0, "前の図が次の実行に残らない");
+});
