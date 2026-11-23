@@ -1,3 +1,5 @@
+import { EXTRA } from "./extra.ts";
+
 export type Lesson = {
   id: string;
   title: string;
@@ -1023,7 +1025,7 @@ const ORDER: [string, string[]][] = [
   ["1-2", ["variable", "keyword", "update", "def", "callparen", "add", "to_seconds", "trapezoid", "distance"]],
   ["1-3", ["compare", "if", "logic", "iseven", "diff", "water_state", "recursion"]],
   ["1-4", ["error", "runtime", "logicerr", "assert", "spec", "debugprint", "style"]],
-  ["2-1", ["fstring", "len", "strindex", "strmethod", "intconv"]],
+  ["2-1", ["fstring", "len", "strindex", "concat", "contains", "find", "strmethod", "countchar", "is_shout", "strip", "backslash", "intconv", "remove_hyphen", "flip_lr", "swap_name", "ext"]],
   ["2-2", ["list", "append", "sorted"]],
   ["2-3", ["elif", "in"]],
   ["3-1", ["dict", "dictloop"]],
@@ -1038,10 +1040,10 @@ const ORDER: [string, string[]][] = [
 
 export const LESSONS: Lesson[] = ORDER.flatMap(([ref, ids]) =>
   ids.map((id) => {
-    const l = ALL.find((x) => x.id === id);
+    const l = [...ALL, ...EXTRA].find((x) => x.id === id);
     if (!l) throw new Error(`レッスンがありません: ${id}`);
     return { ...l, ref };
   }),
 );
 // 並び順に入れ忘れたレッスンがあれば、すぐ気づけるようにする
-if (LESSONS.length !== ALL.length) throw new Error("ORDER に入っていないレッスンがあります");
+if (LESSONS.length !== ALL.length + EXTRA.length) throw new Error("ORDER に入っていないレッスンがあります");
