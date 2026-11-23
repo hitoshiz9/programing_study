@@ -4,6 +4,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { CHAPTERS, chapterUrl, LESSONS, type Lesson } from "@/lib/lessons";
 import { READ_LESSONS, type ReadLesson } from "@/lib/reading";
 import { ML_LESSONS } from "@/lib/ml";
+import { EXPLAIN, type Block } from "@/lib/explain";
 import { judge, type RunResult } from "@/lib/judge";
 import { BADGES, complete, dayString, EMPTY, levelBar, parse } from "@/lib/progress";
 import { getRaw, save, subscribe } from "@/lib/store";
@@ -227,6 +228,54 @@ function ChapterLink({ refId }: { refId: string }) {
   );
 }
 
+// くわしい説明。コード例は「予想してから実行」できるよう、結果は実行ボタンを押すまで出さない。
+function Explain({ blocks }: { blocks: Block[] }) {
+  return (
+    <div className="mt-4 border-t border-amber-100 pt-2">
+      <h3 className="mt-2 font-bold">📚 くわしい説明</h3>
+      {blocks.map((b, i) =>
+        "h" in b ? (
+          <h4 key={i} className="mt-5 mb-1 font-bold text-amber-800">
+            {b.h}
+          </h4>
+        ) : "p" in b ? (
+          <p key={i} className="mb-2 leading-relaxed">
+            {b.p}
+          </p>
+        ) : (
+          <Example key={i} code={b.code} />
+        ),
+      )}
+    </div>
+  );
+}
+
+function Example({ code }: { code: string }) {
+  const [out, setOut] = useState<RunResult | null>(null);
+  const [running, setRunning] = useState(false);
+  return (
+    <div className="mb-3">
+      <pre className="overflow-x-auto rounded-lg bg-stone-800 p-3 font-mono text-sm text-amber-100">{code}</pre>
+      <button
+        onClick={async () => {
+          setRunning(true);
+          setOut(await runPython(code));
+          setRunning(false);
+        }}
+        disabled={running}
+        className="mt-1 rounded-full border border-amber-400 px-3 py-1 text-sm hover:bg-amber-50 disabled:opacity-50"
+      >
+        {running ? "実行中…" : "▶ 実行してみる（結果を予想してから押そう）"}
+      </button>
+      {out && (
+        <pre className="mt-1 overflow-x-auto whitespace-pre-wrap rounded-lg bg-stone-700 p-3 font-mono text-sm text-green-200">
+          {out.error ?? (out.out || "(何も表示されていません)")}
+        </pre>
+      )}
+    </div>
+  );
+}
+
 function NextButton({ onNext }: { onNext?: () => void }) {
   if (!onNext) return null;
   return (
@@ -374,10 +423,18 @@ function WriteView({
         ))}
         <p className="mt-3 text-sm font-semibold">お手本</p>
         <pre className="mt-1 overflow-x-auto rounded-lg bg-stone-800 p-3 font-mono text-sm text-amber-100">{lesson.example}</pre>
+        {EXPLAIN[lesson.id] && (
+          <>
+            <a href="#practice" className="mt-3 inline-block text-sm text-sky-700 underline hover:text-sky-900">
+              ✏️ 説明を飛ばして練習へ ↓
+            </a>
+            <Explain blocks={EXPLAIN[lesson.id]} />
+          </>
+        )}
         <ChapterLink refId={lesson.ref} />
       </section>
 
-      <section className="rounded-2xl bg-white p-5 shadow-sm">
+      <section id="practice" className="scroll-mt-20 rounded-2xl bg-white p-5 shadow-sm">
         <h3 className="mb-2 font-bold">✏️ 練習：{lesson.task}</h3>
         <label htmlFor="code" className="sr-only">
           コードを書く欄
