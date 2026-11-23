@@ -5,10 +5,18 @@ import { runWith } from "../public/harness.mjs";
 import { CHAPTERS, chapterUrl, LESSONS } from "../lib/lessons.ts";
 import { judge } from "../lib/judge.ts";
 import { READ_LESSONS } from "../lib/reading.ts";
+import { ML_LESSONS } from "../lib/ml.ts";
+import { resolve } from "node:path";
 import { complete, EMPTY, levelOf, parse } from "../lib/progress.ts";
 
-const py = await loadPyodide();
-const run = (lesson: (typeof LESSONS)[number], code: string) => runWith(py, code, lesson.test);
+// 公開版と同じく public/pyodide の部品を使う(機械学習の部品もここにある)
+const py = await loadPyodide({ indexURL: resolve("public/pyodide") + "/" });
+// 画面と同じく、import している部品を先に読み込んでから実行する
+const run = async (lesson: (typeof LESSONS)[number], code: string) => {
+  await py.loadPackagesFromImports(code, { messageCallback: () => {} });
+  return runWith(py, code, lesson.test);
+};
+const ALL_WRITE = [...LESSONS, ...ML_LESSONS];
 
 test("レッスン: id が重複せず、20本以上ある", () => {
   assert.ok(LESSONS.length >= 20);
@@ -17,27 +25,27 @@ test("レッスン: id が重複せず、20本以上ある", () => {
 });
 
 test("レッスン: どれも東大教材の章に属し、リンク先の形が正しい", () => {
-  for (const l of LESSONS) assert.ok(CHAPTERS[l.ref], l.id);
+  for (const l of ALL_WRITE) assert.ok(CHAPTERS[l.ref], l.id);
   assert.equal(chapterUrl("1-2"), "https://utokyo-ipp.github.io/1/1-2.html");
 });
 
-for (const l of LESSONS) {
-  test(`${l.id}: 模範解答は合格する`, () => {
-    const r = run(l, l.solution);
+for (const l of ALL_WRITE) {
+  test(`${l.id}: 模範解答は合格する`, async () => {
+    const r = await run(l, l.solution);
     assert.ok(judge(l, l.solution, r).ok, JSON.stringify(r));
   });
-  test(`${l.id}: 不正解の例は不合格になる`, () => {
-    assert.equal(judge(l, l.wrong, run(l, l.wrong)).ok, false);
+  test(`${l.id}: 不正解の例は不合格になる`, async () => {
+    assert.equal(judge(l, l.wrong, await run(l, l.wrong)).ok, false);
   });
-  test(`${l.id}: 最初の状態(starter)は不合格になる`, () => {
-    assert.equal(judge(l, l.starter, run(l, l.starter)).ok, false);
+  test(`${l.id}: 最初の状態(starter)は不合格になる`, async () => {
+    assert.equal(judge(l, l.starter, await run(l, l.starter)).ok, false);
   });
 }
 
 const norm = (s: string) => s.split("\n").map((l) => l.trimEnd()).join("\n").trim();
 
 test("読む: id が「書く」と重ならず、どれも章に属する", () => {
-  const ids = [...READ_LESSONS.map((l) => l.id), ...LESSONS.map((l) => l.id)];
+  const ids = [...READ_LESSONS.map((l) => l.id), ...ALL_WRITE.map((l) => l.id)];
   assert.equal(new Set(ids).size, ids.length);
   for (const l of READ_LESSONS) assert.ok(CHAPTERS[l.ref], l.id);
 });
