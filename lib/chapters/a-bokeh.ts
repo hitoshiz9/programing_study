@@ -133,7 +133,7 @@ export const chapter: Chapter = {
     "bok-line": [
       { h: "Bokeh とは" },
       { p: "Bokeh も、グラフを描くためのライブラリの1つです。Matplotlib が「画像」を作るのに対して、Bokeh はブラウザの中で動くグラフを作ります。マウスでグラフを動かしたり、拡大したり、画像として保存したりする道具（ツールバー）が最初から付いているのが特徴です。" },
-      { p: "Bokeh のグラフを表示するには、BokehJS という JavaScript の部品を、インターネットから読みこむ必要があります。このアプリの中のPythonからは、その部品を読みこんで表示することができないので、Bokeh は使いません。ここでは、Bokeh での書き方を説明の中で紹介し、同じ種類のグラフを Matplotlib で描いて練習します。" },
+      { p: "Bokeh のグラフを表示するには、BokehJS という JavaScript の部品が必要で、標準の設定ではインターネットから読みこみます。このアプリの中のPythonからは、その部品を読みこんで表示することができないので、Bokeh は使いません。ここでは、Bokeh での書き方を説明の中で紹介し、同じ種類のグラフを Matplotlib で描いて練習します。" },
       { h: "Bokeh での線グラフの書き方" },
       { p: "Bokeh では、from bokeh.plotting import figure, show, output_notebook と import します。Jupyter で使うときは、最初に output_notebook() を呼んで「グラフをノートブックの中に出す」と決めておきます。p = figure(title=\"Sales\", x_axis_label=\"week\", y_axis_label=\"count\") でグラフの台紙を作り、p.line(x, y) で線を描き、最後に show(p) で表示します。題名や軸の名前を、台紙を作るときにまとめて渡すのが Matplotlib との違いです。" },
       { p: "線の見た目は、p.line(x, y, line_color=\"red\", line_dash=\"dashed\", legend_label=\"train\") のようにキーワード引数で決めます。legend_label を付けた線は、自動で凡例に並びます。Matplotlib では、それぞれ color=、linestyle=\"--\"、label= に当たり、凡例は plt.legend( ) を呼んで出します。" },
@@ -173,7 +173,7 @@ export const chapter: Chapter = {
     ],
     "bok-save": [
       { h: "グラフをファイルにする" },
-      { p: "Bokeh のグラフには、ツールバーに画像を保存するボタンがあり、押すと PNG 形式の画像として保存できます。また、from bokeh.plotting import output_file として output_file(\"chart.html\") を呼んでから show(p) すると、グラフだけを1つの HTML ファイルとして保存できます。すでに output_notebook() を呼んでいるときは、reset_output() で設定をもとにもどしてから output_file を使います。2つの設定が重なったままだと、show でエラーになることがあります。" },
+      { p: "Bokeh のグラフには、ツールバーに画像を保存するボタンがあり、押すと PNG 形式の画像として保存できます。また、from bokeh.plotting import output_file として output_file(\"chart.html\") を呼んでから show(p) すると、グラフだけを1つの HTML ファイルとして保存できます。すでに output_notebook() を呼んでいるときは、reset_output() で設定をもとにもどしてから output_file を使います。2つの設定は同時に有効にでき、そのときは show で両方に出力されます。片方だけにしたいときに使います。" },
       { p: "Matplotlib では plt.savefig(ファイル名) で保存し、拡張子で形式が決まります。.svg にすると、線や文字を、点の集まりではなく図形の命令として書いた SVG 形式になります。SVG はいくら拡大してもぼやけず、ブラウザでもそのまま表示できます。中身は文字なので、open( ) で読むと <svg で始まるタグが入っています。" },
     ],
   },

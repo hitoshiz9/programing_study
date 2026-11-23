@@ -16,6 +16,7 @@ import os, warnings
 os.environ.setdefault("MPLBACKEND", "Agg")
 warnings.filterwarnings("ignore", message=".*non-interactive.*")
 warnings.filterwarnings("ignore", message=".*[Gg]lyph.*")
+warnings.filterwarnings("ignore", message=".*as_object_map.*")
 `;
 
 // 描かれたグラフを PNG(base64)にして取り出し、次の実行に残らないよう閉じる

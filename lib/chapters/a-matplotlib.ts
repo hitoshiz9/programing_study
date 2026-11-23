@@ -49,7 +49,7 @@ export const chapter: Chapter = {
     {
       id: "mpl-style",
       title: "Matplotlib：線の色・形・印",
-      intro: ["plt.plot には、color=（色）、linestyle=（線の形）、marker=（点の印）を付けられます。たとえば color=\"red\"、linestyle=\"--\"（点線）、marker=\"o\"（丸）です。"],
+      intro: ["plt.plot には、color=（色）、linestyle=（線の形）、marker=（点の印）を付けられます。たとえば color=\"red\"、linestyle=\"--\"（破線）、marker=\"o\"（丸）です。"],
       example: PLT + 'plt.plot([1, 3, 2], color="green", marker="s")\nplt.show()',
       task: "values を、色が red、線の形が \"--\"、点の印が \"o\" の線グラフで描こう。",
       starter: PLT + "values = [2, 5, 3, 6]\n",
