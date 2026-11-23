@@ -1,7 +1,7 @@
 // 著作権の確認(手元で実行): アプリの説明文に、東大教材と同じ文字が25文字以上続く部分がないかを調べる。
 // 教材は改変禁止(CC BY-NC-ND)なので、文章は写さず独自に書く方針。その確認用。
 // 実行: node scripts/check-similarity.mts   (教材のページをネットから読むので、CI では動かさない)
-import { CHAPTERS, LESSONS } from "../lib/lessons.ts";
+import { CHAPTERS, chapterUrl, LESSONS } from "../lib/lessons.ts";
 import { READ_LESSONS } from "../lib/reading.ts";
 import { ML_LESSONS } from "../lib/ml.ts";
 import { EXPLAIN } from "../lib/explain.ts";
@@ -14,7 +14,7 @@ const textOf = (html: string) =>
 // 教材の全章の、25文字ずつの並びを集める
 const ref = new Set<string>();
 for (const r of Object.keys(CHAPTERS)) {
-  const t = textOf(await (await fetch(`https://utokyo-ipp.github.io/${r.split("-")[0]}/${r}.html`)).text());
+  const t = textOf(await (await fetch(chapterUrl(r))).text());
   for (let i = 0; i + N <= t.length; i++) ref.add(t.slice(i, i + N));
 }
 
