@@ -6,10 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON tests/",
+    "postinstall": "node scripts/copy-pyodide.mjs"
   },
   "dependencies": {
     "next": "16.4.6",
+    "pyodide": "^314.0.8",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },

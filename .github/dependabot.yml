@@ -1,0 +1,11 @@
+# 部品の更新を GitHub が毎週知らせてくれる(更新が止まった部品に早く気づくため)
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
