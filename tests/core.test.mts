@@ -189,3 +189,12 @@ test("グラフ: matplotlib で描いた図が画像として取り出され、�
   assert.ok(Buffer.from(r.images[0], "base64").subarray(1, 4).toString() === "PNG");
   assert.equal(runWith(py, "print(1)").images.length, 0, "前の図が次の実行に残らない");
 });
+
+test("出力: 改行で終わらない出力も、その実行の結果に入り、次の実行に持ちこさない", () => {
+  assert.equal(runWith(py, 'print("a", end="")').out, "a");
+  assert.equal(runWith(py, 'print("b")').out, "b\n");
+  const e = runWith(py, 'print("c", end="")\n1 / 0');
+  assert.equal(e.out, "c");
+  assert.match(e.error!, /ZeroDivisionError/);
+  assert.equal(runWith(py, 'print("d")').out, "d\n");
+});
