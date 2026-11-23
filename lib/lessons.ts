@@ -32,6 +32,9 @@ export const CHAPTERS: Record<string, string> = {
   "6-1": "内包表記",
   "6-2": "高階関数",
   "6-3": "クラス",
+  "5-3": "NumPyライブラリ",
+  "7-1": "pandasライブラリ",
+  "7-2": "scikit-learnライブラリ",
 };
 
 export const chapterUrl = (ref: string) => `https://utokyo-ipp.github.io/${ref.split("-")[0]}/${ref}.html`;

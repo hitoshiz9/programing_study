@@ -4,6 +4,8 @@ import type { RunResult } from "./judge";
 let worker: Worker | null = null;
 let ready: Promise<void> | null = null;
 
+const LOAD_LIMIT_MS = 120_000; // 部品の読み込み(初回の機械学習は数十秒かかることがある)
+
 function start() {
   const w = new Worker(`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/py-worker.mjs`, { type: "module" });
   worker = w;
@@ -28,16 +30,25 @@ export async function runPython(code: string, test?: string, timeoutMs = 5000): 
   }
   const w = worker!;
   return new Promise((resolve) => {
-    const timer = setTimeout(() => {
+    const stop = (r: RunResult) => {
       w.terminate();
       worker = null;
       preload();
-      resolve({ out: "", testOut: "", error: null, timedOut: true });
-    }, timeoutMs);
+      resolve(r);
+    };
+    // まず部品の読み込みを待ち、"start" が来てから実行時間を計る
+    let timer = setTimeout(
+      () => stop({ out: "", testOut: "", error: "部品の読み込みに時間がかかりすぎました。通信の状態を確かめて、もう一度実行してください。" }),
+      LOAD_LIMIT_MS,
+    );
     w.onmessage = (e) => {
-      if (e.data.type !== "result") return;
-      clearTimeout(timer);
-      resolve(e.data.result);
+      if (e.data.type === "start") {
+        clearTimeout(timer);
+        timer = setTimeout(() => stop({ out: "", testOut: "", error: null, timedOut: true }), timeoutMs);
+      } else if (e.data.type === "result") {
+        clearTimeout(timer);
+        resolve(e.data.result);
+      }
     };
     w.postMessage({ code, test });
   });

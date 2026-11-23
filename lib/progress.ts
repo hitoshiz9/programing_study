@@ -18,6 +18,7 @@ export const BADGES = [
   { id: "lv5", emoji: "🚀", name: "レベル5", desc: "レベル5に到達" },
   { id: "read-clear", emoji: "📖", name: "読めるようになった", desc: "「読む」を全部クリア" },
   { id: "write-clear", emoji: "✍️", name: "書けるようになった", desc: "「書く」を全部クリア" },
+  { id: "ml-clear", emoji: "🤖", name: "AIの入口に立った", desc: "「AI」を全部クリア" },
 ] as const;
 
 export const levelOf = (xp: number) => Math.floor(Math.sqrt(xp / 25)) + 1;

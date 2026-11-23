@@ -3,15 +3,17 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { CHAPTERS, chapterUrl, LESSONS, type Lesson } from "@/lib/lessons";
 import { READ_LESSONS, type ReadLesson } from "@/lib/reading";
+import { ML_LESSONS } from "@/lib/ml";
 import { judge, type RunResult } from "@/lib/judge";
 import { BADGES, complete, dayString, EMPTY, levelBar, parse } from "@/lib/progress";
 import { getRaw, save, subscribe } from "@/lib/store";
 import { preload, runPython } from "@/lib/runner";
 
-// ステージは「読む → 書く」の順。どれも最初から開いている。
+// ステージは「読む → 書く → AI」の順。どれも最初から開いている。
 const STAGES = [
   { id: "read", label: "📖 読む", lessons: READ_LESSONS as { id: string; title: string; ref: string }[] },
   { id: "write", label: "✍️ 書く", lessons: LESSONS as { id: string; title: string; ref: string }[] },
+  { id: "ml", label: "🤖 AI", lessons: ML_LESSONS as { id: string; title: string; ref: string }[] },
 ] as const;
 type StageId = (typeof STAGES)[number]["id"];
 const TOTAL = STAGES.reduce((n, s) => n + s.lessons.length, 0);
@@ -111,7 +113,7 @@ export default function App() {
 
       <div className="mx-auto grid max-w-6xl gap-4 p-4 md:grid-cols-[260px_1fr]">
         <nav aria-label="レッスン一覧" className="md:sticky md:top-20 md:max-h-[calc(100vh-6rem)] md:overflow-y-auto">
-          <div role="tablist" aria-label="ステージ" className="mb-2 grid grid-cols-2 gap-1 rounded-xl bg-amber-100 p-1">
+          <div role="tablist" aria-label="ステージ" className="mb-2 grid grid-cols-3 gap-1 rounded-xl bg-amber-100 p-1">
             {STAGES.map((s) => {
               const done = s.lessons.filter((l) => isDone(l.id)).length;
               return (
@@ -133,11 +135,11 @@ export default function App() {
               );
             })}
           </div>
-          <p className="mb-2 px-1 text-xs text-stone-500">おすすめの順番：📖 読む → ✍️ 書く</p>
+          <p className="mb-2 px-1 text-xs text-stone-500">おすすめの順番：📖 読む → ✍️ 書く → 🤖 AI</p>
           <ol className="space-y-1">
             {stage.lessons.map((l, n) => (
               <li key={l.id}>
-                {cur.stage === "write" && l.ref !== stage.lessons[n - 1]?.ref && (
+                {cur.stage !== "read" && l.ref !== stage.lessons[n - 1]?.ref && (
                   <p className="mt-3 mb-1 px-1 text-xs font-bold text-stone-500">
                     {l.ref} {CHAPTERS[l.ref]}
                   </p>
@@ -186,6 +188,7 @@ export default function App() {
             <WriteView
               key={lessonMeta.id}
               lesson={lessonMeta as Lesson}
+              label={cur.stage === "ml" ? "AI" : "書く"}
               n={cur.i + 1}
               done={isDone(lessonMeta.id)}
               code={codes[lessonMeta.id] ?? (lessonMeta as Lesson).starter}
@@ -327,7 +330,8 @@ function WriteView({
   setCode,
   onCorrect,
   onNext,
-}: ViewProps & { lesson: Lesson; code: string; setCode: (v: string) => void }) {
+  label,
+}: ViewProps & { lesson: Lesson; label: string; code: string; setCode: (v: string) => void }) {
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<{ r: RunResult; ok: boolean; message: string } | null>(null);
   const [hintCount, setHintCount] = useState(0);
@@ -360,7 +364,7 @@ function WriteView({
     <>
       <section className="rounded-2xl bg-white p-5 shadow-sm">
         <p className="text-sm text-stone-500">
-          書く {n} ・ {lesson.xp} XP {done && "・ クリア済み"}
+          {label} {n} ・ {lesson.xp} XP {done && "・ クリア済み"}
         </p>
         <h2 className="mb-3 text-2xl font-bold">{lesson.title}</h2>
         {lesson.intro.map((p, i) => (
