@@ -1,3 +1,5 @@
+import { MODULES } from "./chapters/index.ts";
+
 // ステージ「読む」: コードを読んで、表示される結果を3択で予想する
 export type ReadLesson = {
   id: string; // 「書く」と重ならないよう r- で始める
@@ -11,7 +13,7 @@ export type ReadLesson = {
   ref: string; // 東大教材の章
 };
 
-export const READ_LESSONS: ReadLesson[] = [
+const BASE_READ: ReadLesson[] = [
   {
     id: "r-order",
     title: "上から順に動く",
@@ -431,3 +433,6 @@ export const READ_LESSONS: ReadLesson[] = [
     ref: "6-1",
   },
 ];
+
+// 章ファイル(lib/chapters)の「読む」問題を、章の順に後ろへ足す
+export const READ_LESSONS: ReadLesson[] = [...BASE_READ, ...MODULES.flatMap((m) => m.reads.map((r) => ({ ...r, ref: m.ref })))];

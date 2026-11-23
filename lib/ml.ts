@@ -1,4 +1,5 @@
 import type { Lesson } from "./lessons";
+import { CHAPTER_ORDER, MODULES } from "./chapters/index.ts";
 
 // ステージ「AI(機械学習)」: NumPy → pandas → scikit-learn の順。形式は「書く」と同じ。
 // 章は東大教材の 5-3 / 7-1 / 7-2。文章は独自。
@@ -11,7 +12,7 @@ const IRIS_STARTER =
   "from sklearn.datasets import load_iris\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.tree import DecisionTreeClassifier\n\n" +
   "X, y = load_iris(return_X_y=True)  # アヤメの花 150 本のデータ\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)\nmodel = DecisionTreeClassifier(random_state=0)\n";
 
-export const ML_LESSONS: Lesson[] = [
+const BASE_ML: Lesson[] = [
   {
     id: "m-np-array",
     ref: "5-3",
@@ -225,3 +226,22 @@ export const ML_LESSONS: Lesson[] = [
     xp: 40,
   },
 ];
+
+// 章ファイル(lib/chapters)で並びが決まっている「AI」の章は、そちらの並びを使う
+const ML_MODS = MODULES.filter((m) => m.stage === "ml" && m.order.length > 0);
+const ML_POOL: Lesson[] = [...BASE_ML, ...ML_MODS.flatMap((m) => m.lessons.map((l) => ({ ...l, ref: m.ref })))];
+const ML_REFS = [...new Set([...BASE_ML.map((l) => l.ref), ...ML_MODS.map((m) => m.ref)])].sort(
+  (a, b) => CHAPTER_ORDER.indexOf(a) - CHAPTER_ORDER.indexOf(b),
+);
+
+export const ML_LESSONS: Lesson[] = ML_REFS.flatMap((ref) => {
+  const m = ML_MODS.find((x) => x.ref === ref);
+  const ids = m ? m.order : BASE_ML.filter((l) => l.ref === ref).map((l) => l.id);
+  return ids.map((id) => {
+    const l = ML_POOL.find((x) => x.id === id);
+    if (!l) throw new Error(`レッスンがありません: ${id}`);
+    return { ...l, ref };
+  });
+});
+if (new Set(ML_LESSONS.map((l) => l.id)).size !== ML_LESSONS.length) throw new Error("同じレッスンが2回並んでいます");
+if (ML_LESSONS.length !== ML_POOL.length) throw new Error("並びに入っていないレッスンがあります");
