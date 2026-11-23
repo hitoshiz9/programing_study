@@ -148,7 +148,7 @@ for (const [id, blocks] of Object.entries(EXPLAIN)) {
 import { TOPICS } from "../lib/topics.ts";
 
 // 東大教材の節の数(見出しの数 + 練習の数。2026-11-24 に数えた)
-const REF_SECTIONS: Record<string, number> = { "1-1": 14 + 1, "1-2": 11 + 3 };
+const REF_SECTIONS: Record<string, number> = { "1-1": 14 + 1, "1-2": 11 + 3, "1-3": 7 + 2, "1-4": 8 };
 
 for (const ref of EXPLAINED_CHAPTERS) {
   test(`省略なし: ${ref} の節がすべて、問題と説明で扱われている`, () => {
