@@ -143,3 +143,24 @@ for (const [id, blocks] of Object.entries(EXPLAIN)) {
     });
   });
 }
+
+// ---- 教材の節を省いていないか ----
+import { TOPICS } from "../lib/topics.ts";
+
+// 東大教材の節の数(見出しの数 + 練習の数。2026-11-24 に数えた)
+const REF_SECTIONS: Record<string, number> = { "1-1": 14 + 1, "1-2": 11 + 3 };
+
+for (const ref of EXPLAINED_CHAPTERS) {
+  test(`省略なし: ${ref} の節がすべて、問題と説明で扱われている`, () => {
+    const topics = TOPICS[ref] ?? [];
+    assert.equal(topics.length, REF_SECTIONS[ref], "節の数が教材と合いません");
+    const read = new Map(READ_LESSONS.map((l) => [l.id, l]));
+    const write = new Set(ALL_WRITE.map((l) => l.id));
+    for (const [section, ids] of topics) {
+      assert.ok(ids.length > 0, `${section}: 問題がありません`);
+      for (const id of ids) assert.ok(write.has(id) || read.has(id), `${section}: ${id} という問題はありません`);
+      const explained = ids.some((id) => (EXPLAIN[id]?.length ?? 0) > 0 || (read.get(id)?.explain.length ?? 0) >= 80);
+      assert.ok(explained, `${section}: 説明がありません`);
+    }
+  });
+}
