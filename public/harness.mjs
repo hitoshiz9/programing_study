@@ -16,6 +16,7 @@ import os, warnings
 os.environ.setdefault("MPLBACKEND", "Agg")
 warnings.filterwarnings("ignore", message=".*non-interactive.*")
 warnings.filterwarnings("ignore", message=".*[Gg]lyph.*")
+warnings.filterwarnings("ignore", message=".*as_object_map.*")
 `;
 
 // 描かれたグラフを PNG(base64)にして取り出し、次の実行に残らないよう閉じる
@@ -47,27 +48,43 @@ function collectImages(py) {
   }
 }
 
+// 改行で終わらない出力(print(..., end="") など)も、その実行の結果に入れる。
+// これをしないと、残った出力が次の実行の結果の先頭に出てしまう。
+const FLUSH = "import sys; sys.stdout.flush(); sys.stderr.flush()";
+
 // code を実行し、続けて test(任意)を同じ環境で実行する。出力は別々に返す。
 export function runWith(py, code, test) {
   const ns = py.toPy({});
   let buf = "";
-  const write = (s) => {
-    buf += s + "\n";
+  // 1行ずつではなく、書かれたとおりのバイト列で受け取る(改行で終わらない出力も取りこぼさない)
+  const writer = () => {
+    const dec = new TextDecoder();
+    return {
+      write: (bytes) => {
+        buf += dec.decode(bytes, { stream: true });
+        return bytes.length;
+      },
+    };
   };
-  py.setStdout({ batched: write });
-  py.setStderr({ batched: write });
+  py.setStdout(writer());
+  py.setStderr(writer());
   py.setStdin({ error: true });
   const r = { out: "", testOut: "", error: null, images: [] };
   try {
     py.runPython(SETUP);
     py.runPython(code, { globals: ns });
+    py.runPython(FLUSH);
     r.out = buf;
     buf = "";
     if (test) {
       py.runPython(test, { globals: ns });
+      py.runPython(FLUSH);
       r.testOut = buf;
     }
   } catch (e) {
+    try {
+      py.runPython(FLUSH);
+    } catch {}
     if (!r.out) r.out = buf;
     r.error = cleanError(String(e && e.message ? e.message : e));
   } finally {

@@ -1,16 +1,116 @@
 import type { Chapter } from "./types.ts";
 
-// 付録：簡単なデータの可視化。order が空のあいだは「まだ作っていない章」として扱う(既存の問題は lessons.ts / ml.ts の並びのまま)。
+// 付録：簡単なデータの可視化。文章と問題は独自(教材の文は写さない)。グラフの中の文字は英語にする。
+const PLT = "import matplotlib.pyplot as plt\n\n";
+// 判定用: 描いた線の数と、それぞれの x・y の値を表示する
+const LINES =
+  "import matplotlib.pyplot as plt\nax = plt.gca()\nprint(len(ax.lines))\nfor ln in ax.lines:\n    print([float(v) for v in ln.get_xdata()], [float(v) for v in ln.get_ydata()])";
+
 export const chapter: Chapter = {
   ref: "A-visualization",
   title: "付録：簡単なデータの可視化",
   url: "https://utokyo-ipp.github.io/appendix/3-visualization.html",
   stage: "ml",
-  order: [],
-  lessons: [],
+  order: ["vis-plot", "vis-plot2", "vis-scatter", "vis-bar"],
+  lessons: [
+    {
+      id: "vis-plot",
+      title: "グラフ：リストを折れ線グラフにする",
+      intro: [
+        "matplotlib（マットプロットリブ）は、グラフを描くためのライブラリです。使うときは、最初に「import matplotlib.pyplot as plt」と書きます。",
+        "plt.plot(リスト) で、リストの値を折れ線グラフにします。plt.show() で描いたグラフが、結果の下に画像で表示されます。",
+      ],
+      example: PLT + "plt.plot([3, 1, 2])\nplt.show()",
+      task: "squares の値を、plt.plot で折れ線グラフにしよう（判定では、描いた線の値を調べます）。",
+      starter: PLT + "squares = [1, 4, 9, 16, 25]\n",
+      solution: PLT + "squares = [1, 4, 9, 16, 25]\nplt.plot(squares)\nplt.show()",
+      wrong: PLT + "squares = [1, 4, 9, 16, 25]\nplt.plot(squares[:4])\nplt.show()",
+      test: LINES,
+      expect: "1\n[0.0, 1.0, 2.0, 3.0, 4.0] [1.0, 4.0, 9.0, 16.0, 25.0]",
+      mustInclude: ["plot"],
+      hints: ["plt.plot(squares) で描けます。", "plt.plot(squares) のあとに plt.show() を書くと、グラフが表示されます。"],
+      xp: 20,
+    },
+    {
+      id: "vis-plot2",
+      title: "グラフ：線を2本描く",
+      intro: ["plt.plot を2回書くと、1つのグラフに線が2本重なって描かれます。色は自動で別々になります。"],
+      example: PLT + "plt.plot([1, 2, 3])\nplt.plot([3, 2, 1])\nplt.show()",
+      task: "shop_a と shop_b の売り上げを、同じグラフに2本の折れ線で描こう（shop_a を先に描く）。",
+      starter: PLT + "shop_a = [5, 7, 6, 9]\nshop_b = [3, 4, 8, 7]\n",
+      solution: PLT + "shop_a = [5, 7, 6, 9]\nshop_b = [3, 4, 8, 7]\nplt.plot(shop_a)\nplt.plot(shop_b)\nplt.show()",
+      wrong: PLT + "shop_a = [5, 7, 6, 9]\nshop_b = [3, 4, 8, 7]\nplt.plot(shop_a)\nplt.show()",
+      test: LINES,
+      expect: "2\n[0.0, 1.0, 2.0, 3.0] [5.0, 7.0, 6.0, 9.0]\n[0.0, 1.0, 2.0, 3.0] [3.0, 4.0, 8.0, 7.0]",
+      mustInclude: ["plot"],
+      hints: ["plt.plot(shop_a) と plt.plot(shop_b) を続けて書きます。", "最後に plt.show() です。"],
+      xp: 20,
+    },
+    {
+      id: "vis-scatter",
+      title: "グラフ：散布図",
+      intro: ["plt.scatter(横のリスト, 縦のリスト) は、点を打つだけのグラフ（散布図）を描きます。2つのリストは同じ長さにします。"],
+      example: PLT + "plt.scatter([1, 2, 3], [2, 1, 3])\nplt.show()",
+      task: "身長 heights を横、体重 weights を縦にした散布図を、plt.scatter で描こう。",
+      starter: PLT + "heights = [150, 160, 165, 172, 180]\nweights = [45, 52, 60, 63, 75]\n",
+      solution: PLT + "heights = [150, 160, 165, 172, 180]\nweights = [45, 52, 60, 63, 75]\nplt.scatter(heights, weights)\nplt.show()",
+      wrong: PLT + "heights = [150, 160, 165, 172, 180]\nweights = [45, 52, 60, 63, 75]\nplt.scatter(weights, heights)\nplt.show()",
+      test: "import matplotlib.pyplot as plt\nprint(plt.gca().collections[0].get_offsets().tolist())",
+      expect: "[[150.0, 45.0], [160.0, 52.0], [165.0, 60.0], [172.0, 63.0], [180.0, 75.0]]",
+      mustInclude: ["scatter"],
+      hints: ["横が先、縦があとです。", "plt.scatter(heights, weights) のあと plt.show() です。"],
+      xp: 20,
+    },
+    {
+      id: "vis-bar",
+      title: "グラフ：辞書を棒グラフにする",
+      intro: ["plt.bar(横の位置, 高さ) は棒グラフを描きます。横の位置に文字列のリストを渡すと、それが棒の下に名前として出ます。"],
+      example: PLT + 'plt.bar(["x", "y"], [3, 5])\nplt.show()',
+      task: "votes のキーを棒の名前、値を棒の高さにして、plt.bar で棒グラフを描こう。",
+      starter: PLT + 'votes = {"cat": 12, "dog": 9, "bird": 4}\n',
+      solution: PLT + 'votes = {"cat": 12, "dog": 9, "bird": 4}\nplt.bar(list(votes.keys()), list(votes.values()))\nplt.show()',
+      wrong: PLT + 'votes = {"cat": 12, "dog": 9, "bird": 4}\nplt.bar([0, 1, 2], list(votes.values()))\nplt.show()',
+      test: "import matplotlib.pyplot as plt\nax = plt.gca()\nprint([float(p.get_height()) for p in ax.patches])\nprint([t.get_text() for t in ax.get_xticklabels()])",
+      expect: "[12.0, 9.0, 4.0]\n['cat', 'dog', 'bird']",
+      mustInclude: ["bar"],
+      hints: ["名前は list(votes.keys())、高さは list(votes.values()) です。", "plt.bar(list(votes.keys()), list(votes.values())) のあと plt.show() です。"],
+      xp: 25,
+    },
+  ],
   reads: [],
-  explain: {},
-  topics: [],
+  explain: {
+    "vis-plot": [
+      { h: "数を絵にする" },
+      { p: "数がたくさん並んでいると、ふえているのか、へっているのか、ひと目では分かりません。グラフにすると、変化の様子や大きさの違いがすぐに見えてきます。データを絵にして見えるようにすることを「可視化」と呼びます。" },
+      { p: "Python には可視化の道具がいろいろありますが、もっとも広く使われているのが matplotlib です。import のしかたは 5-1 のモジュールの章でくわしく学びますが、ここでは「最初に import matplotlib.pyplot as plt と書くと、plt.〇〇 という書き方でグラフの命令が使える」とだけ覚えておけば十分です。" },
+      { h: "このアプリでのグラフの表示" },
+      { p: "Jupyter や Colab では、%matplotlib inline という特別な命令（マジックコマンド）でグラフを表示する設定をすることがありますが、このアプリでは不要です。描いたグラフは、実行のあとに自動で画像になって、結果の下に表示されます。plt.show( ) を書いておくと、ほかの環境に持っていってもそのまま動きます。" },
+      { p: "グラフの中には日本語の文字を表示できないので、題名や目盛りの名前などは英語で書きましょう。" },
+      { h: "折れ線グラフ" },
+      { p: "plt.plot(リスト) は、リストの0番目、1番目、… の値を順に点にとり、線でつなぎます。横の位置は、値の番号（0, 1, 2, …）になります。" },
+      { code: "import matplotlib.pyplot as plt\n\nline = plt.plot([1, 4, 9, 16])[0]\nprint(line.get_xdata().tolist())", out: "[0.0, 1.0, 2.0, 3.0]" },
+    ],
+    "vis-plot2": [
+      { h: "何本も重ねる" },
+      { p: "plt.plot を何回も書くと、同じグラフに線が重なっていきます。描いた順に、青・オレンジ・緑…と、自動で色が変わります。2つのお店の売り上げのように、比べたいデータを並べると違いが分かりやすくなります。" },
+    ],
+    "vis-scatter": [
+      { h: "散布図" },
+      { p: "plt.scatter(横のリスト, 縦のリスト) は、i 番目の横の値と i 番目の縦の値の組を、1つの点として打ちます。点を線でつながないので、身長と体重のような「2つの量の関係」を見るのに向いています。点が右上がりに並んでいれば、片方が大きいほど、もう片方も大きい傾向があるといえます。2つのリストの長さがそろっていないとエラーになります。" },
+    ],
+    "vis-bar": [
+      { h: "棒グラフ" },
+      { p: "plt.bar(横の位置, 高さ) は、横の位置ごとに、指定した高さの棒を立てます。横の位置に 0, 1, 2, … のような整数のリストを渡すと、棒が等しい間隔で並びます。" },
+      { p: "横の位置に文字列のリストを渡すと、棒が左から順に並び、棒の下にその文字列が名前として表示されます。辞書のキーを名前、値を高さにすれば、「何がいくつあるか」を数えた辞書を、そのまま棒グラフにできます。" },
+      { code: "import matplotlib.pyplot as plt\n\ncount = {\"a\": 3, \"b\": 1}\nbars = plt.bar(list(count.keys()), list(count.values()))\nprint(len(bars))", out: "2" },
+    ],
+  },
+  topics: [
+    ["matplotlib", ["vis-plot"]],
+    ["折れ線グラフ", ["vis-plot", "vis-plot2"]],
+    ["散布図", ["vis-scatter"]],
+    ["棒グラフ", ["vis-bar"]],
+  ],
   refSections: 4,
   refProse: 944,
 };

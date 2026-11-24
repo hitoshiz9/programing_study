@@ -269,13 +269,16 @@ function Example({ code }: { code: string }) {
       </button>
       {out && (
         <pre className="mt-1 overflow-x-auto whitespace-pre-wrap rounded-lg bg-stone-700 p-3 font-mono text-sm text-green-200">
-          {out.error ?? (out.out || (out.images?.length ? "(グラフ)" : "(何も表示されていません)"))}
+          {out.timedOut ? TIMEOUT_MSG : (out.error ?? (out.out || (out.images?.length ? "(グラフ)" : "(何も表示されていません)")))}
         </pre>
       )}
       {out && <Figures images={out.images} />}
     </div>
   );
 }
+
+// 止まらないコードを止めたときの表示(「書く」の判定と同じ文)
+const TIMEOUT_MSG = "時間がかかりすぎたので止めました。くり返しが終わらなくなっていないか見直そう。";
 
 // matplotlib で描いたグラフ(PNG)を表示する
 function Figures({ images }: { images?: string[] }) {
@@ -375,7 +378,7 @@ function ReadView({ lesson, n, done, onCorrect, onNext }: ViewProps & { lesson: 
         </div>
         {run && (
           <pre className="mt-3 overflow-x-auto whitespace-pre-wrap rounded-lg bg-stone-800 p-3 font-mono text-sm text-green-200">
-            {run.out || "(何も表示されていません)"}
+            {run.timedOut ? TIMEOUT_MSG : run.error ?? (run.out || "(何も表示されていません)")}
           </pre>
         )}
         {ok && <NextButton onNext={onNext} />}
@@ -417,9 +420,12 @@ function WriteView({
     } else if (e.key === "Tab" && !e.shiftKey) {
       e.preventDefault();
       const t = e.currentTarget;
-      const s = t.selectionStart;
-      setCode(code.slice(0, s) + "    " + code.slice(t.selectionEnd));
-      requestAnimationFrame(() => t.setSelectionRange(s + 4, s + 4));
+      // ブラウザの「入力」として入れると、Ctrl + Z で取り消せる(入らないブラウザでは直接書きかえる)
+      if (!document.execCommand("insertText", false, "    ")) {
+        const s = t.selectionStart;
+        setCode(code.slice(0, s) + "    " + code.slice(t.selectionEnd));
+        requestAnimationFrame(() => t.setSelectionRange(s + 4, s + 4));
+      }
     }
   }
 
