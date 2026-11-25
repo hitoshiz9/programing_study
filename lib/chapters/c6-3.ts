@@ -4,13 +4,15 @@ import type { Chapter } from "./types.ts";
 const ROBOT = 'class Robot:\n    def name(self):\n        return "ロボ"\n\n    def greet(self):\n        return "ぼくは" + self.name() + "です"\n';
 const REPEATER =
   'class Repeater:\n    def __init__(self, n):\n        self.n = n\n\n    def item(self):\n        return "★"\n\n    def __iter__(self):\n        return self\n\n    def __next__(self):\n        if self.n == 0:\n            raise StopIteration\n        self.n = self.n - 1\n        return self.item()\n';
+const SQUARES =
+  "class Squares:\n    def __init__(self, n):\n        self.i = 0\n        self.n = n\n\n    def __iter__(self):\n        return self\n\n    def __next__(self):\n        if self.i == self.n:\n            raise StopIteration\n        self.i = self.i + 1\n        return self.i * self.i\n";
 
 export const chapter: Chapter = {
   ref: "6-3",
   title: "クラス",
   url: "https://utokyo-ipp.github.io/6/6-3.html",
   stage: "write",
-  order: ["l63-define", "class", "counter", "l63-stock", "l63-inherit", "l63-superinit", "l63-override", "l63-iter", "l63-repeat", "l63-with"],
+  order: ["l63-define", "class", "counter", "l63-stock", "l63-inherit", "l63-superinit", "l63-override", "l63-iter", "l63-repeat", "l63-with", "l63-ex-bank", "l63-ex-squares"],
   lessons: [
     {
       id: "l63-define",
@@ -20,7 +22,7 @@ export const chapter: Chapter = {
         "メソッドの最初の引数は self と書く決まりです。クラス名() と書くと、そのクラスのもの（インスタンス）が1つできます。",
       ],
       example: 'class Bell:\n    def ring(self):\n        return "チリン"\n\nb = Bell()\nprint(b.ring())',
-      task: "呼ぶといつも「ニャー」を返すメソッド cry() を持つクラス Cat を作ろう。",
+      task: "呼ぶといつも文字列 \"ニャー\" を返すメソッド cry() を持つクラス Cat を作ろう。",
       starter: "class Cat:\n    pass\n",
       solution: 'class Cat:\n    def cry(self):\n        return "ニャー"',
       wrong: 'class Cat:\n    def cry(self):\n        return "ワン"',
@@ -37,7 +39,7 @@ export const chapter: Chapter = {
         "ほかのメソッドの中でも self.n で読んだり、self.n = self.n - 1 のように書きかえたりできます。",
       ],
       example: "",
-      task: "作ったときに在庫の数を属性 n に覚え、take() を呼ぶたびに n を1つ減らして「どうぞ」を返し、n が 0 のときは減らさずに「売り切れ」を返すクラス Stock を完成させよう。",
+      task: "作ったときに在庫の数を属性 n に覚え、take() を呼ぶたびに n を1つ減らして文字列 \"どうぞ\" を返し、n が 0 のときは減らさずに文字列 \"売り切れ\" を返すクラス Stock を完成させよう。",
       starter: "class Stock:\n    def __init__(self, n):\n        pass\n\n    def take(self):\n        pass\n",
       solution:
         'class Stock:\n    def __init__(self, n):\n        self.n = n\n\n    def take(self):\n        if self.n == 0:\n            return "売り切れ"\n        self.n = self.n - 1\n        return "どうぞ"',
@@ -93,7 +95,7 @@ export const chapter: Chapter = {
       ],
       example:
         'class Report:\n    def title(self):\n        return "報告"\n\n    def show(self):\n        return "【" + self.title() + "】"\n\nclass Memo(Report):\n    def title(self):\n        return "メモ"\n\nprint(Memo().show())',
-      task: "Robot を継承したクラス NekoRobot を作ろう。name() だけを書きなおして「ネコロボ」を返すようにすれば、親の greet() がそのまま使えます。",
+      task: "Robot を継承したクラス NekoRobot を作ろう。name() だけを書きなおして文字列 \"ネコロボ\" を返すようにすれば、親の greet() がそのまま使えます。",
       starter: ROBOT + "\n\nclass NekoRobot(Robot):\n    pass\n",
       solution: ROBOT + '\n\nclass NekoRobot(Robot):\n    def name(self):\n        return "ネコロボ"',
       wrong: ROBOT + '\n\nclass NekoRobot(Robot):\n    name = "ネコロボ"',
@@ -125,23 +127,51 @@ export const chapter: Chapter = {
     },
     {
       id: "l63-repeat",
-      title: "継承して、出すものを変える",
-      intro: [
-        "親のクラスの __init__ を子で書きなおすと、親の __init__ は自動では動きません。親が使う属性を忘れずに用意しましょう。",
-        "super().__init__(n) と書けば、親の __init__ に仕事をまかせられます。",
-      ],
-      example:
-        'class Animal:\n    def __init__(self, name):\n        self.name = name\n\nclass Bird(Animal):\n    def __init__(self, name, wings):\n        super().__init__(name)\n        self.wings = wings\n\nb = Bird("ぴよ", 2)\nprint(b.name, b.wings)',
-      task: "Repeater は、for 文で回すと「★」を n 回出すクラスです。これを継承して、作るときに渡した文字列 word を n 回出すクラス WordRepeater(word, n) を作ろう。__init__ と item() を書きなおします。",
-      starter: REPEATER + "\n\nclass WordRepeater(Repeater):\n    def __init__(self, word, n):\n        pass\n",
-      solution: REPEATER + "\n\nclass WordRepeater(Repeater):\n    def __init__(self, word, n):\n        super().__init__(n)\n        self.word = word\n\n    def item(self):\n        return self.word",
-      wrong: REPEATER + "\n\nclass WordRepeater(Repeater):\n    def __init__(self, word, n):\n        self.word = word\n\n    def item(self):\n        return self.word",
-      expect: "['ぴよ', 'ぴよ', 'ぴよ']\n['abc'] True",
-      test: 'print(list(WordRepeater("ぴよ", 3)))\nprint(list(WordRepeater("abc", 1)), issubclass(WordRepeater, Repeater))',
+      title: "継承して、番号を出すようにする",
+      intro: [],
+      example: "",
+      task: "Repeater は、for 文で回すと文字列 \"★\" を n 回出すクラスです。これを継承して、1, 2, 3, … と番号を n 個出すクラス Numbered(n) を作ろう。__init__ では super() で親の __init__ に n をわたしてから、数えるための属性 self.count を 0 にします。item() は self.count を1増やして、その値を返すように書きなおします。",
+      starter: REPEATER + "\n\nclass Numbered(Repeater):\n    def __init__(self, n):\n        pass\n",
+      solution: REPEATER + "\n\nclass Numbered(Repeater):\n    def __init__(self, n):\n        super().__init__(n)\n        self.count = 0\n\n    def item(self):\n        self.count = self.count + 1\n        return self.count",
+      wrong: REPEATER + "\n\nclass Numbered(Repeater):\n    def __init__(self, n):\n        self.count = 0\n\n    def item(self):\n        self.count = self.count + 1\n        return self.count",
+      expect: "[1, 2, 3]\n[1]",
+      test: "print(list(Numbered(3)))\nprint(list(Numbered(1)))",
+      mustInclude: ["super().__init__("],
       hints: [
-        "__init__ では、親が使う self.n と、新しく self.word の両方を用意します。super().__init__(n) と self.word = word の2行です。",
-        "item(self) を書きなおして return self.word にします。__iter__ と __next__ は親のものがそのまま使えます。",
+        "__init__ の中は super().__init__(n) と self.count = 0 の2行です。",
+        "item(self) の中は self.count = self.count + 1 と return self.count です。__iter__ と __next__ は親のものがそのまま使えます。",
       ],
+      xp: 40,
+    },
+    {
+      id: "l63-ex-bank",
+      title: "演習：貯金箱のクラス",
+      intro: [],
+      example: "",
+      task: "クラス Bank を完成させよう。Bank(owner) で作ると、名前を属性 self.owner に、合計を属性 self.total に 0 として覚えます。deposit(x) は self.total に x を足します。__str__ は owner + \"の貯金: \" + str(self.total) + \"円\" の文字列を返します。",
+      starter: "class Bank:\n    def __init__(self, owner):\n        pass\n\n    def deposit(self, x):\n        pass\n\n    def __str__(self):\n        pass\n",
+      solution:
+        'class Bank:\n    def __init__(self, owner):\n        self.owner = owner\n        self.total = 0\n\n    def deposit(self, x):\n        self.total = self.total + x\n\n    def __str__(self):\n        return self.owner + "の貯金: " + str(self.total) + "円"',
+      wrong:
+        'class Bank:\n    def __init__(self, owner):\n        self.owner = owner\n        self.total = 0\n\n    def deposit(self, x):\n        self.total = x\n\n    def __str__(self):\n        return self.owner + "の貯金: " + str(self.total) + "円"',
+      expect: "ぴよの貯金: 350円\n350\nミケの貯金: 0円",
+      test: 'b = Bank("ぴよ")\nb.deposit(100)\nb.deposit(250)\nprint(b)\nprint(b.total)\nprint(Bank("ミケ"))',
+      mustInclude: ["__str__"],
+      hints: ["__init__ では self.owner = owner と self.total = 0 の2行です。deposit では self.total = self.total + x です。", '__str__ では return self.owner + "の貯金: " + str(self.total) + "円" です。'],
+      xp: 40,
+    },
+    {
+      id: "l63-ex-squares",
+      title: "演習：自分で作ったイテレータを filter と sum に",
+      intro: [],
+      example: "",
+      task: "Squares(n) は、for 文で回すと 1, 4, 9, … と、1 から n までの数の2乗を順に出すクラスです。Squares(6) が出す数のうち、偶数だけの合計を、filter と sum を使って表示しよう。",
+      starter: SQUARES,
+      solution: SQUARES + "\nprint(sum(filter(lambda x: x % 2 == 0, Squares(6))))",
+      wrong: SQUARES + "\nprint(sum(Squares(6)))",
+      expect: "56",
+      mustInclude: ["filter", "sum"],
+      hints: ["偶数かどうかは lambda x: x % 2 == 0 で調べられます。filter には Squares(6) をそのままわたせます。", "print(sum(filter(lambda x: x % 2 == 0, Squares(6)))) です。"],
       xp: 40,
     },
     {
@@ -153,7 +183,7 @@ export const chapter: Chapter = {
       ],
       example:
         'class Door:\n    def __enter__(self):\n        print("ドアを開けた")\n        return self\n\n    def __exit__(self, exc_type, exc_value, traceback):\n        print("ドアを閉めた")\n\nwith Door() as d:\n    print("部屋の中")',
-      task: "with 文の始めに「準備」、終わりに「片付け」と表示するように、クラス Kitchen に __enter__ と __exit__ を足そう。with Kitchen() as k: の中で k.cook() を呼べるように、__enter__ は self を返します。",
+      task: "with 文の始めに print(\"準備\")、終わりに print(\"片付け\") が動くように、クラス Kitchen に __enter__ と __exit__ を足そう。with Kitchen() as k: の中で k.cook() を呼べるように、__enter__ は self を返します。",
       starter: 'class Kitchen:\n    def cook(self):\n        print("料理中")\n',
       solution:
         'class Kitchen:\n    def cook(self):\n        print("料理中")\n\n    def __enter__(self):\n        print("準備")\n        return self\n\n    def __exit__(self, exc_type, exc_value, traceback):\n        print("片付け")',
@@ -171,8 +201,8 @@ export const chapter: Chapter = {
       title: "len と print で呼ばれるメソッド",
       intro: "len(p) と print(p) で、それぞれどの特殊メソッドが呼ばれるかに注目しよう。",
       code: 'class Pair:\n    def __init__(self, a, b):\n        self.a = a\n        self.b = b\n\n    def __len__(self):\n        return 2\n\n    def __str__(self):\n        return str(self.a) + "と" + str(self.b)\n\np = Pair(30, 50)\nprint(len(p))\nprint(p)',
-      choices: ["80\n30と50", "2\n30と50", "2\n<__main__.Pair object>"],
-      answer: 1,
+      choices: ["2\n30と50", "80\n30と50", "2\n<__main__.Pair object>"],
+      answer: 0,
       explain:
         "len(p) を使うと __len__ が呼ばれ、その返値の 2 が len の結果になります。中の数を足した 80 ではありません。print(p) を使うと __str__ が呼ばれ、返した文字列「30と50」が表示されます。<__main__.Pair object> のような表示になるのは、__str__ を書いていないときです。",
       xp: 15,
@@ -182,10 +212,21 @@ export const chapter: Chapter = {
       title: "同じクラスから作った2つのもの",
       intro: "同じクラスから2回作ると、同じものになるのか、別のものになるのかに注目しよう。",
       code: 'class Bell:\n    def ring(self):\n        return "チリン"\n\na = Bell()\nb = Bell()\nprint(a.ring() == b.ring(), a is b)',
-      choices: ["True True", "True False", "False False"],
-      answer: 1,
+      choices: ["True False", "True True", "False False"],
+      answer: 0,
       explain:
         "Bell() と書くたびに、新しいインスタンスが1つずつ作られます。a と b はどちらも Bell の仲間なので ring() は同じ「チリン」を返し、== は True です。けれども、is は「まったく同じ1つのものか」を調べるので、別々に作った a と b では False になります。True True を選んだ人は、「同じクラスなら同じもの」と考えたのかもしれません。クラスは設計図で、そこから作ったものは1つ1つ別物です。",
+      xp: 15,
+    },
+    {
+      id: "r63-isinstance",
+      title: "isinstance と type",
+      intro: "2つのクラスを作り、c がどちらのクラスのインスタンスかを調べています。",
+      code: "class Cat:\n    pass\n\nclass Dog:\n    pass\n\nc = Cat()\nprint(isinstance(c, Cat), isinstance(c, Dog), type(c) == Cat)",
+      choices: ["True True True", "True False True", "True False False"],
+      answer: 1,
+      explain:
+        "c は Cat() で作ったので、isinstance(c, Cat) は True、isinstance(c, Dog) は False です。type(c) は c を作ったクラスそのもの（Cat）を返すので、type(c) == Cat は True です。True True True を選んだ人は、中身が同じ（どちらも pass だけ）なら同じ種類だと考えています。クラスは名前ごとに別の種類です。",
       xp: 15,
     },
     {
@@ -193,8 +234,8 @@ export const chapter: Chapter = {
       title: "属性と、ふつうの変数",
       intro: "self.size と、外で作った変数 size は別のものです。__init__ の中で何が代入されたかを追いかけよう。",
       code: "class Box:\n    def __init__(self, size):\n        self.size = size * 2\n\nb = Box(3)\nsize = 10\nprint(b.size)",
-      choices: ["3", "6", "10"],
-      answer: 1,
+      choices: ["3", "10", "6"],
+      answer: 2,
       explain:
         "Box(3) で __init__ が動き、引数 size には 3 が入ります。self.size = size * 2 なので、b の属性 size は 6 になります。そのあとの size = 10 は、クラスの外のふつうの変数を作っただけで、b の属性とは関係がありません。10 を選んだ人は、名前が同じなので同じものだと思ったのでしょう。3 を選んだ人は、* 2 を見落としています。b.size のように「b の」と付いているものは、b が持っている値です。",
       xp: 15,
@@ -202,23 +243,23 @@ export const chapter: Chapter = {
     {
       id: "r63-super",
       title: "書いていないメソッドは親から",
-      intro: "子のクラス Dog には intro が書かれていません。そのとき、どのメソッドが使われるかを考えよう。",
-      code: 'class Animal:\n    def __init__(self, name):\n        self.name = name\n\n    def intro(self):\n        return self.name + "です"\n\nclass Dog(Animal):\n    def bark(self):\n        return "ワン"\n\nd = Dog("ポチ")\nprint(d.intro(), d.bark())',
-      choices: ["ワン ワン", "ポチ ワン", "ポチです ワン"],
-      answer: 2,
+      intro: "子のクラス Dog には hello が書かれていません。そのとき、どのメソッドが使われるかを考えよう。",
+      code: 'class Animal:\n    def __init__(self, name):\n        self.name = name\n\n    def hello(self):\n        return self.name + "です"\n\nclass Dog(Animal):\n    def bark(self):\n        return "ワン"\n\nd = Dog("ポチ")\nprint(d.hello(), d.bark())',
+      choices: ["ポチです ワン", "ワン ワン", "ポチ ワン"],
+      answer: 0,
       explain:
-        "Dog は Animal を継承しているので、自分で書いていない __init__ と intro は親の Animal のものが使われます。Dog(\"ポチ\") で親の __init__ が動き、self.name は「ポチ」になります。d.intro() は「ポチです」、d.bark() は Dog で書いた「ワン」です。継承では、子に書いたものが優先され、書いていないものは親から探されます。「です」を見落とした人は、intro の return の中身をもう一度読んでみよう。",
+        "Dog は Animal を継承しているので、自分で書いていない __init__ と hello は親の Animal のものが使われます。Dog(\"ポチ\") で親の __init__ が動き、self.name は「ポチ」になります。d.hello() は「ポチです」、d.bark() は Dog で書いた「ワン」です。継承では、子に書いたものが優先され、書いていないものは親から探されます。「です」を見落とした人は、hello の return の中身をもう一度読んでみよう。",
       xp: 15,
     },
     {
       id: "r63-iter",
       title: "使い切ったイテレータ",
-      intro: "__next__ の中で self.left が減っていきます。同じものを2回 list にしたら、2回目はどうなるかに注目しよう。",
-      code: 'class Two:\n    def __init__(self):\n        self.left = 2\n\n    def __iter__(self):\n        return self\n\n    def __next__(self):\n        if self.left == 0:\n            raise StopIteration\n        self.left = self.left - 1\n        return "ぴよ"\n\nt = Two()\nprint(list(t))\nprint(list(t))',
+      intro: "__next__ の中で self.n が減っていきます。同じものを2回 list にしたら、2回目はどうなるかに注目しよう。",
+      code: 'class Two:\n    def __init__(self):\n        self.n = 2\n\n    def __iter__(self):\n        return self\n\n    def __next__(self):\n        if self.n == 0:\n            raise StopIteration\n        self.n = self.n - 1\n        return "ぴよ"\n\nt = Two()\nprint(list(t))\nprint(list(t))',
       choices: ["['ぴよ', 'ぴよ']\n['ぴよ', 'ぴよ']", "['ぴよ']\n['ぴよ']", "['ぴよ', 'ぴよ']\n[]"],
       answer: 2,
       explain:
-        "list(t) は、StopIteration が出るまで __next__ を何度も呼び、返ってきた値を集めます。1回目で「ぴよ」が2つ集まり、そのとき self.left は 0 になっています。__iter__ は self をそのまま返すだけで、left を元に戻しません。そのため2回目の list(t) では、最初の __next__ ですぐ StopIteration になり、空のリストです。もう一度回したいときは、Two() で新しく作り直します。",
+        "list(t) は、StopIteration が出るまで __next__ を何度も呼び、返ってきた値を集めます。1回目で「ぴよ」が2つ集まり、そのとき self.n は 0 になっています。__iter__ は self をそのまま返すだけで、n を元に戻しません。そのため2回目の list(t) では、最初の __next__ ですぐ StopIteration になり、空のリストです。もう一度回したいときは、Two() で新しく作り直します。",
       xp: 20,
     },
     {

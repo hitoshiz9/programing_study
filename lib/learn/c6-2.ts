@@ -88,6 +88,8 @@ export const chapter: LearnChapter = {
         { p: "max や sum も、イテラブルを1つずつ取り出して使う関数なので、map が作ったイテレータを list( ) に直さずに、そのままわたせます。sum(map(abs, nums)) は「各要素の絶対値を順に出して、その合計を取る」という意味です。" },
         { p: "max(words, key=len) は「いちばん長い文字列そのもの」を、max(map(len, words)) は「いちばん長い文字列の文字数」を返します。ほしいものがどちらかで使い分けます。" },
         { code: 'nums = [3, -4, 5]\nprint(sum(map(abs, nums)))\nwords = ["zz", "abcd"]\nprint(max(map(len, words)))\nprint(max(words, key=len))', out: "12\n4\nabcd" },
+        { p: "map の結果もイテラブルなので、map の結果にもう一度 map を使うこともできます。下の例では、まず絶対値にしてから、それぞれに 1 を足しています。" },
+        { code: "inner = map(abs, [-3, 4])\nouter = map(lambda x: x + 1, inner)\nprint(list(outer))", out: "[4, 5]" },
         { try: "r62-summap" },
       ],
     },
