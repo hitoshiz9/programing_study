@@ -6,7 +6,7 @@ export const chapter: Chapter = {
   title: "モジュールの使い方",
   url: "https://utokyo-ipp.github.io/5/5-1.html",
   stage: "write",
-  order: ["math", "l51-import", "l51-from", "l51-as", "l51-practice"],
+  order: ["math", "l51-import", "l51-from", "l51-as", "l51-practice", "l51-mix"],
   lessons: [
     {
       id: "l51-import",
@@ -73,6 +73,20 @@ export const chapter: Chapter = {
       hints: ["使っている名前は floor、ceil、e の3つです。", "from math import floor, ceil, e と書きかえます。"],
       xp: 25,
     },
+    {
+      id: "l51-mix",
+      title: "演習: 箱づめの数",
+      intro: [],
+      example: "",
+      task: "りんご 45 個を、1箱に 6 個ずつ詰めます。import math as m で読み込んだ m.floor を使って、6 個ちょうど入った箱がいくつできるかを表示しよう。次の行に、from math import ceil で取りこんだ ceil を使って、りんごを全部詰めるのに必要な箱の数を表示しよう。",
+      starter: "# ここに書こう\n",
+      solution: "import math as m\nfrom math import ceil\n\nprint(m.floor(45 / 6))\nprint(ceil(45 / 6))",
+      wrong: "import math as m\nfrom math import ceil\n\nprint(ceil(45 / 6))\nprint(m.floor(45 / 6))",
+      expect: "7\n8",
+      mustInclude: ["m.floor(", "from math import", "ceil("],
+      hints: ["45 / 6 は 7.5 です。切り捨てると 6 個入りの箱の数、切り上げると必要な箱の数になります。", "print(m.floor(45 / 6)) と print(ceil(45 / 6)) です。"],
+      xp: 25,
+    },
   ],
   reads: [
     {
@@ -97,47 +111,31 @@ export const chapter: Chapter = {
         "1回目の print の時点では、pi は自分で入れた \"パイ\" です。そのあと from math import * で、math の中の名前が全部取りこまれ、math の pi が同じ名前を上書きします。そのため2回目は円周率になります。このように、* はどんな名前が入ってくるか見えにくく、自分の変数をこっそり書きかえてしまうことがあるので、使わないほうが安全です。",
       xp: 15,
     },
+    {
+      id: "r51-multi",
+      title: "2つのモジュールを1行で",
+      intro: "",
+      code: "import string, math\nprint(len(string.digits))\nprint(math.floor(9.99))",
+      choices: ["10\n9", "9\n9", "10\n10"],
+      answer: 0,
+      explain:
+        "import string, math の1行で、string と math の両方が使えるようになります。string.digits は 0 から 9 までの数字を並べた文字列 \"0123456789\" なので、len で数えると 10 文字です（9 だと思った人は、0 も数えるのを忘れています）。math.floor(9.99) は切り捨てなので 9 です。四捨五入ではないので 10 にはなりません。",
+      xp: 15,
+    },
+    {
+      id: "r51-asmod",
+      title: "別名で呼ぶ",
+      intro: "",
+      code: "import math as m\nprint(m.floor(4.5) + m.ceil(4.5))",
+      choices: ["8", "10", "9"],
+      answer: 2,
+      explain:
+        "import math as m のあとは、math の関数を m.floor や m.ceil のように、別名の m を付けて呼べます。m.floor(4.5) は切り捨てで 4、m.ceil(4.5) は切り上げで 5 なので、4 + 5 = 9 です。8 や 10 を選んだ人は、floor と ceil のどちらかを、もう一方と同じ向きに丸めてしまっています。",
+      xp: 15,
+    },
   ],
-  explain: {
-    math: [
-      { h: "モジュールと import" },
-      { p: "Python には、よく使う関数や値を、目的ごとにまとめた部品が用意されています。これをモジュールといいます。数学の道具をまとめた math、乱数の random、ファイルやディレクトリを扱う os などがあります。モジュールは、import モジュール名 と書いて読み込んでから使います。import はふつう、プログラムのいちばん上にまとめて書きます。" },
-      { p: "読み込んだモジュールの中の関数や値は、math.sqrt(2) や math.pi のように「モジュール名.名前」の形で使います。名前の前にモジュール名が付いているので、どのモジュールの道具なのかがひと目で分かります。" },
-      { code: "import math\nprint(math.sqrt(2))\nprint(math.pi)\nprint(math.cos(0))\nprint(math.log(32, 2))", out: "1.4142135623730951\n3.141592653589793\n1.0\n5.0" },
-      { p: "import math, random のように、カンマで区切って複数のモジュールを1行で読み込むこともできます。" },
-    ],
-    "l51-import": [
-      { h: "モジュールの中には何がある？" },
-      { p: "math には、平方根の sqrt のほかに、三角関数の sin や cos、対数の log、切り捨ての floor、切り上げの ceil、階乗の factorial など、たくさんの関数が入っています。円周率 pi やネイピア数 e のような値もあります。どんな名前があるかは、Python の公式ドキュメントの math のページで調べられます。" },
-      { p: "floor と ceil は、負の数のときに注意が必要です。floor は「それ以下でいちばん大きい整数」なので、-2.5 の切り捨ては -3 になります。int() は小数点以下を取りのぞくだけなので、int(-2.5) は -2 です。" },
-      { code: "import math\nprint(math.floor(-2.5), math.ceil(-2.5), int(-2.5))", out: "-3 -2 -2" },
-    ],
-    "l51-from": [
-      { h: "from ... import ..." },
-      { p: "from モジュール名 import 名前 と書くと、その名前だけを今のプログラムに取りこみ、モジュール名を付けずに使えるようになります。関数だけでなく、pi のような値（モジュールの中の変数）や、あとで学ぶクラスも同じように取りこめます。" },
-      { code: "from math import sqrt, pi\nprint(sqrt(2))\nprint(pi)", out: "1.4142135623730951\n3.141592653589793" },
-      { h: "* でまとめて取りこむ" },
-      { p: "from math import * と書くと、math の中の名前を（_ で始まるものをのぞいて）全部取りこみます。書くのは楽ですが、どんな名前が入ってきたのかがコードから読み取れません。自分で作った変数や関数と同じ名前があると、知らないうちに上書きされてしまいます。そのため、* を使うのはすすめられていません。使う名前を1つずつ書きましょう。" },
-    ],
-    "l51-as": [
-      { h: "別名を付ける" },
-      { p: "import モジュール名 as 別名 と書くと、モジュールを別の名前で使えます。名前が長いモジュールを短く呼びたいときに便利です。たとえば、5-3 で学ぶ NumPy は、import numpy as np として np という名前で使うのが習慣になっています。" },
-      { p: "from モジュール名 import 名前 as 別名 と書けば、取りこむ関数や値に別の名前を付けられます。自分のプログラムにすでに同じ名前があってぶつかるときにも使えます。" },
-      { code: "import math as m\nfrom math import factorial as fact\nprint(m.pi)\nprint(fact(6))", out: "3.141592653589793\n720" },
-      { p: "import math as m とだけ書いたときに使えるのは m という名前だけで、math という名前は使えません。両方の名前で使いたいときは、import math も書いておきます。" },
-    ],
-    "l51-practice": [
-      { h: "import の書き方を選ぶ" },
-      { p: "import math は、名前が増えないので安全ですが、毎回 math. を付ける必要があります。from math import ... は、短く書けますが、どの名前がどこから来たのかを import の行で確かめる必要があります。少しの関数をたくさん使うときは from、いろいろな関数を少しずつ使うときは import、のように使い分けましょう。" },
-      { code: "from math import sqrt, sin, pi\nprint(sqrt(9))\nprint(round(sin(pi / 2), 3))", out: "3.0\n1.0" },
-    ],
-  },
-  topics: [
-    ["モジュールのインポート", ["math", "l51-import", "r51-prefix"]],
-    ["from", ["l51-from", "r51-clash"]],
-    ["as", ["l51-as"]],
-    ["練習: math. なしで動かす", ["l51-practice"]],
-  ],
+  explain: {},
+  topics: [],
   refSections: 4,
   refProse: 1248,
 };
