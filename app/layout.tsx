@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ぴよぴよ Python",
+  title: "Python学習",
   description: "ブラウザで書いて動かす Python 入門",
   // インストール用の設定。置き場所(basePath)を前に付ける
   manifest: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/manifest.webmanifest`,
