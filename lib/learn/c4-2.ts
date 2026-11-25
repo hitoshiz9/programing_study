@@ -129,5 +129,5 @@ export const chapter: LearnChapter = {
     },
   ],
   // 章の最後の演習問題: ファイル・for・iter・next・関数を組み合わせる(教材の練習とは別の題材に作り直した)
-  exercises: ["l42-count", "l42-head"],
+  exercises: ["l42-count", "l42-skiphead"],
 };

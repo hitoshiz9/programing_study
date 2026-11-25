@@ -3,7 +3,7 @@ import type { Chapter } from "./types.ts";
 // イテラブルとイテレータ。教材の節を省かずに、独自の文章と例で問題と説明にする。
 // ファイルは、ブラウザの中の仮のファイル置き場に、毎回作り直してから読む。
 const SHOP = 'with open("shop.txt", "w", encoding="utf-8") as f:\n    f.write("たまご\\nぎゅうにゅう\\nパン\\n")\n\n';
-const DIARY = 'with open("diary.txt", "w", encoding="utf-8") as f:\n    f.write("はれ\\nくもり\\nあめ\\nはれ\\n")\n\n';
+const DIARY = 'with open("diary.txt", "w", encoding="utf-8") as f:\n    f.write("はれ\\nくもり\\nあめ\\nはれのちあめ\\n")\n\n';
 const QUIZ = 'with open("quiz.txt", "w", encoding="utf-8") as f:\n    f.write("問題一覧\\n1+1\\n2*3\\n")\n\n';
 const SONG = 'with open("song.txt", "w", encoding="utf-8") as f:\n    f.write("ドレミ\\nファソ\\nラシド\\n")\n\n';
 
@@ -12,7 +12,7 @@ export const chapter: Chapter = {
   title: "イテラブルとイテレータ",
   url: "https://utokyo-ipp.github.io/4/4-2.html",
   stage: "write",
-  order: ["l42-filefor", "l42-iter", "l42-next", "l42-filenext", "l42-enumerate", "zip", "l42-count", "l42-head"],
+  order: ["l42-filefor", "l42-iter", "l42-next", "l42-filenext", "l42-enumerate", "zip", "l42-count", "l42-skiphead"],
   lessons: [
     {
       id: "l42-filefor",
@@ -32,17 +32,17 @@ export const chapter: Chapter = {
     },
     {
       id: "l42-count",
-      title: "ファイルの行数を数える関数",
-      intro: ["ファイルに対する for は、ファイルの終わりに来るまでくり返します。くり返した回数を数えれば、行数が分かります。"],
-      example: 'n = 0\nfor x in ["a", "b", "c"]:\n    n = n + 1\nprint(n)',
-      task: "ファイル名 name を受け取り、そのファイルの行数を、ファイルに対する for で数えて返す関数 count_lines(name) を作ろう。",
-      starter: DIARY + "def count_lines(name):\n    pass\n",
-      solution: DIARY + 'def count_lines(name):\n    n = 0\n    with open(name, encoding="utf-8") as f:\n        for line in f:\n            n = n + 1\n    return n',
-      wrong: DIARY + 'def count_lines(name):\n    with open(name, encoding="utf-8") as f:\n        return len(f.read())',
-      expect: "4 1",
-      test: 'with open("one.txt", "w", encoding="utf-8") as f:\n    f.write("1行だけ\\n")\nprint(count_lines("diary.txt"), count_lines("one.txt"))',
+      title: "演習: 指定した文字で始まる行を数える",
+      intro: [],
+      example: "",
+      task: "ファイル名 name と1文字 ch を受け取り、そのファイルの行のうち、ch で始まる行の数を、ファイルに対する for で数えて返す関数 count_start(name, ch) を作ろう。行の最初の文字は line[0] で取り出せます。",
+      starter: DIARY + "def count_start(name, ch):\n    pass\n",
+      solution: DIARY + 'def count_start(name, ch):\n    n = 0\n    with open(name, encoding="utf-8") as f:\n        for line in f:\n            if line[0] == ch:\n                n = n + 1\n    return n',
+      wrong: DIARY + 'def count_start(name, ch):\n    n = 0\n    with open(name, encoding="utf-8") as f:\n        for line in f:\n            if ch in line:\n                n = n + 1\n    return n',
+      expect: "2 1 0",
+      test: 'print(count_start("diary.txt", "は"), count_start("diary.txt", "あ"), count_start("diary.txt", "x"))',
       mustInclude: ["for"],
-      hints: ["n = 0 から始め、for line in f: の中で n = n + 1 します。", "with のブロックを抜けたあとで return n します。"],
+      hints: ["n = 0 から始め、for line in f: の中で、line[0] == ch のときだけ n = n + 1 します。", "with のブロックを抜けたあとで return n します。"],
       xp: 25,
     },
     {
@@ -80,21 +80,21 @@ export const chapter: Chapter = {
       xp: 25,
     },
     {
-      id: "l42-head",
-      title: "最初の1つだけ先に取り出す",
-      intro: [
-        "イテレータは、next で取り出したぶんだけ先に進みます。そのあと for で使うと、続きから始まります。",
-        "これを使うと「最初の1つは別あつかいにして、残りはあとでまとめて使う」ことができます。",
-      ],
-      example: 'it = iter(["見出し", "1行目", "2行目"])\nnext(it)  # 1つ読み飛ばす\nfor x in it:\n    print(x)',
-      task: "リスト items を受け取り、イテレータを作って最初の1つを next で取り出し、(最初の1つ, 残りのイテレータ) の組を返す関数 split_head(items) を作ろう。",
-      starter: "def split_head(items):\n    pass\n",
-      solution: "def split_head(items):\n    it = iter(items)\n    head = next(it)\n    return head, it",
-      wrong: "def split_head(items):\n    return items[0], items",
-      expect: "名前\n['ぴよ', 'ミケ']\n[]",
-      test: 'head, rest = split_head(["名前", "ぴよ", "ミケ"])\nprint(head)\nprint(list(rest))\nprint(list(rest))',
-      mustInclude: ["next"],
-      hints: ["it = iter(items) のあと、head = next(it) で最初の1つを取り出します。", "return head, it で、組にして返します。"],
+      id: "l42-skiphead",
+      title: "演習: 見出しを飛ばして、中身のある行を数える",
+      intro: [],
+      example: "",
+      task: "ファイル名 name を受け取り、1行目の見出しを next で読み飛ばしてから、残りの行を for で調べ、空でない行（strip() したあとが \"\" でない行）の数を返す関数 count_body(name) を作ろう。",
+      starter: "def count_body(name):\n    pass\n",
+      solution:
+        'def count_body(name):\n    n = 0\n    with open(name, encoding="utf-8") as f:\n        next(f)\n        for line in f:\n            if line.strip() != "":\n                n = n + 1\n    return n',
+      wrong:
+        'def count_body(name):\n    n = 0\n    with open(name, encoding="utf-8") as f:\n        for line in f:\n            if line.strip() != "":\n                n = n + 1\n    return n',
+      expect: "2 0",
+      test:
+        'with open("body42.txt", "w", encoding="utf-8") as f:\n    f.write("見出し\\nA\\n\\nB\\n")\nwith open("head42.txt", "w", encoding="utf-8") as f:\n    f.write("見出しだけ\\n")\nprint(count_body("body42.txt"), count_body("head42.txt"))',
+      mustInclude: ["next", "for"],
+      hints: ["with で開いたら、for の前に next(f) を1行書いて見出しを飛ばします。", "for line in f: の中で、line.strip() != \"\" のときだけ n = n + 1 し、最後に return n です。"],
       xp: 30,
     },
     {
