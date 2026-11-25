@@ -1,4 +1,125 @@
 import type { LearnChapter } from "./types.ts";
 
-// まだ作っていない章(節が空の章は画面に出さない)
-export const chapter: LearnChapter = { ref: "1-3", sections: [], exercises: [] };
+// 1-3 論理・比較演算と条件分岐の基礎。節の並びは東大教材に合わせ、文章と例はすべて独自に書いている(教材は改変禁止のため)。
+// どの節も「1つの説明 → その説明だけを確かめる問題」の1対をくり返す。
+export const chapter: LearnChapter = {
+  ref: "1-3",
+  sections: [
+    {
+      title: "if文による条件分岐",
+      blocks: [
+        { h: "もし〜なら: if と else" },
+        { p: "if を使うと、条件が成り立つかどうかで、実行する行を変えられます。これを「条件分岐」といいます。if 条件: と書き、条件が成り立つときに実行したい行を、その下に字下げ（半角の空白4つ）して書きます。行の最後の :（コロン）を忘れないようにします。" },
+        { p: "条件が成り立たないときに実行したい行は、else: の下に、同じように字下げして書きます。else は if と同じ位置（同じ字下げ）に書き、else のうしろにも : を付けます。else の部分は、要らなければ書かなくてもかまいません。" },
+        { p: "条件には、たとえば < や > を使った比べる式を書きます。< は「左が右より小さい」、> は「左が右より大きい」です（くわしくは次の節で学びます）。" },
+        { code: "temp = 12\nif temp < 15:\n    print(\"上着を着る\")\nelse:\n    print(\"上着はいらない\")", out: "上着を着る" },
+        { p: "temp は 12 で、12 < 15 は成り立つので、if の下の行だけが実行されます。else の下の行は実行されません。" },
+        { try: "if" },
+        { h: "字下げした行だけが if の中" },
+        { p: "if の下で字下げした行は、何行でも書けて、全部が「条件が成り立つときだけ実行される行」になります。字下げをやめた行は if の外なので、条件が成り立っても成り立たなくても、必ず実行されます。" },
+        { code: "money = 300\nif money > 500:\n    print(\"ケーキを買う\")\n    print(\"紅茶も買う\")\nprint(\"家に帰る\")", out: "家に帰る" },
+        { try: "r-if" },
+        { h: "関数の中の if と return" },
+        { p: "関数の中でも if を使えます。return が実行されると、関数はその場で終わり、その下の行は実行されません。そのため、if の中で return するときは、else を書かずに、if のあとに「条件が成り立たなかったときの return」を書いても、同じ動きになります。" },
+        { code: "def fee(age):\n    if age < 6:\n        return 0\n    return 500\n\nprint(fee(4))\nprint(fee(30))", out: "0\n500" },
+        { p: "fee(4) では 4 < 6 が成り立つので return 0 で終わります。fee(30) では成り立たないので、if の下の行は飛ばされて、return 500 が実行されます。" },
+        { try: "l13-ifret" },
+        { h: "大きいほう・小さいほう: max と min" },
+        { p: "大きいほうの数を選ぶ計算はよく使うので、Python には max という関数がはじめから用意されています。max(3, 8) は 8 です。小さいほうを選ぶ min もあり、min(3, 8) は 3 です。どちらも , で区切って、3つ以上の数を渡すこともできます。" },
+        { code: "print(max(3, 8))\nprint(min(3, 8))\nprint(max(6, 1, 9, 4))", out: "8\n3\n9" },
+        { try: "r13-max" },
+      ],
+    },
+    {
+      title: "様々な条件",
+      blocks: [
+        { h: "比べる演算子" },
+        { p: "比べる演算子は6つあります。< は「より小さい」、<= は「以下（等しいときも含む）」、> は「より大きい」、>= は「以上（等しいときも含む）」、== は「等しい」、!= は「等しくない」です。<= >= == != は、2つの記号を、すき間なく続けて書きます。" },
+        { p: "比べた結果は、成り立てば True、成り立たなければ False です。等しいかどうかを調べるのは == です。= が1つだけだと「代入」になってしまうので、まちがえないようにしましょう。" },
+        { code: "print(5 < 5)\nprint(5 <= 5)\nprint(4 != 7)\nprint(4 == 7)", out: "False\nTrue\nTrue\nFalse" },
+        { try: "compare" },
+        { h: "両方・どちらか: and と or" },
+        { p: "条件1 and 条件2 は「両方とも成り立つ」ときだけ True になります。条件1 or 条件2 は「少なくともどちらか一方が成り立つ」ときに True になります（両方成り立つときも True です）。" },
+        { code: "age = 70\nprint(age >= 65 and age < 80)\nprint(age < 13 or age >= 65)\nprint(age < 13 and age >= 65)", out: "True\nTrue\nFalse" },
+        { try: "logic" },
+        { h: "反対にする: not" },
+        { p: "not 条件 は、条件の結果を反対にします。条件が True なら not を付けると False に、False なら True になります。not 3 > 5 は、まず 3 > 5 を調べて False、それを反対にして True です。" },
+        { code: "print(not 3 > 5)\nprint(not True)", out: "True\nFalse" },
+        { try: "r-cond" },
+        { h: "or では、比べる式を全部書く" },
+        { p: "「i が 1 か 2 か 3」を調べたいときは、i == 1 or i == 2 or i == 3 のように、or の両側に、比べる式をそれぞれ書きます。" },
+        { p: "まちがえやすい点: i == 1 or 2 or 3 と書いてもエラーにはなりませんが、意図どおりには動きません。この条件は、i がどんな値でも成り立ってしまいます（理由は「▲条件として使われる他の値」の節で分かります）。" },
+        { code: "i = 5\nif i == 1 or i == 2 or i == 3:\n    print(\"小さい\")\nelse:\n    print(\"大きい\")", out: "大きい" },
+        { try: "r13-or" },
+        { h: "比べる演算子を続けて書く" },
+        { p: "1 < x < 10 のように、比べる演算子を続けて書くこともできます。これは「1 < x、かつ x < 10」と同じ意味で、x が 1 より大きく 10 より小さいときに True です。<= などを使って 0 <= x <= 100 と書くこともできます。" },
+        { code: "x = 7\nprint(1 < x < 10)\nprint(1 < x < 5)", out: "True\nFalse" },
+        { try: "l13-chain" },
+      ],
+    },
+    {
+      title: "真理値を返す関数",
+      blocks: [
+        { h: "True と False は値" },
+        { p: "True と False は「真理値（しんりち）」と呼ばれる値です。True は「正しい（真）」、False は「まちがい（偽）」を表します。どちらも Python が決めた特別な値（定数）で、変数ではありません。" },
+        { p: "条件は、計算すると True か False になる式です。たとえば x = 3 のとき、x > 1 は True、x < 1 は False です。数と同じように、条件の結果を変数に代入することもできます。" },
+        { code: "x = 3\nprint(x > 1)\nprint(x < 1)\nok = x == 3\nprint(ok)", out: "True\nFalse\nTrue" },
+        { p: "ok = x == 3 は、先に右側の x == 3 を計算して（True）、その答えを ok に代入します。" },
+        { try: "r13-bool" },
+        { h: "条件の結果を、そのまま返す" },
+        { p: "関数の return のうしろに条件を書くと、その結果の True か False が返ります。「〜かどうか」を調べる関数は、このように書けます。" },
+        { p: "1-1 で習った % を使うと、偶数かどうかを調べられます。x % 2 は x を 2 でわったあまりなので、x % 2 == 0 は「x が偶数」のときに True です。" },
+        { code: "def is_positive(x):\n    return x > 0\n\nprint(is_positive(3))\nprint(is_positive(-2))", out: "True\nFalse" },
+        { try: "iseven" },
+        { h: "真理値を返す関数を if で使う" },
+        { p: "True か False を返す関数は、そのまま if の条件に書けます。また、return True や return False のように、真理値を直接返すこともできます。" },
+        { code: "def is_positive(x):\n    return x > 0\n\ndef label(x):\n    if is_positive(x):\n        return \"プラス\"\n    return \"プラスではない\"\n\nprint(label(5))\nprint(label(0))", out: "プラス\nプラスではない" },
+        { try: "l13-boolf" },
+      ],
+    },
+    {
+      title: "オブジェクト",
+      blocks: [
+        { h: "値はみんなオブジェクト" },
+        { p: "Python で計算の結果として出てくる値や、変数の値は、どれも「オブジェクト」と呼ばれます。整数や実数も、True や False も、\" で囲んだ文字（文字列。2-1 でくわしく学びます）も、みなオブジェクトです。この教科書では「オブジェクト」は「データ」や「値」と同じ意味だと思ってかまいません。" },
+        { p: "オブジェクトには種類があり、type で調べられます。整数は int、実数は float、文字列は str、真理値（True と False）は bool という種類です。type(x) == int のように == で比べると、種類が int かどうかを True / False で調べられます。" },
+        { code: "print(type(True))\nprint(type(\"3\"))\nprint(type(2.5) == float)", out: "<class 'bool'>\n<class 'str'>\nTrue" },
+        { p: "\"3\" は \" で囲んであるので、数ではなく文字列（str）です。" },
+        { try: "r-type" },
+      ],
+    },
+    {
+      title: "None",
+      blocks: [
+        { h: "「値がない」ことを表す None" },
+        { p: "None は「意味のある値がない」ことを表す特別な値です（1-2 で、return のない関数が返す値として出てきました）。return だけを書くのは、return None と書くのと同じです。print(None) と書くと None と表示されます。" },
+        { p: "None は 0 とは別の値なので、None == 0 は False です。値が None かどうかを調べるときは、x is None と書きます。x が None なら True です。反対に「None ではない」は x is not None と書きます。また、if の条件に None を書くと、False と同じように扱われます（成り立たない）。" },
+        { code: "def f():\n    return\n\nr = f()\nprint(r)\nprint(r is None)\nif r:\n    print(\"A\")\nelse:\n    print(\"B\")", out: "None\nTrue\nB" },
+        { try: "r-none2" },
+      ],
+    },
+    {
+      title: "▲条件として使われる他の値",
+      blocks: [
+        { h: "数や文字列を条件にする" },
+        { p: "if の条件には、True や False になる式のほかに、数や文字列も書けます。そのときの決まりは次のとおりです。①数は、0 と 0.0 だけが False と同じ扱いで、それ以外の数（マイナスの数も）は True と同じ扱い。②文字列は、何も入っていない \"\"（空文字列）だけが False と同じ扱いで、それ以外は True と同じ扱い。③None は False と同じ扱い。" },
+        { code: "if 0:\n    print(\"A\")\nelse:\n    print(\"B\")\nif -1.5:\n    print(\"C\")\nif \"\":\n    print(\"D\")\nif \"x\":\n    print(\"E\")", out: "B\nC\nE" },
+        { p: "前の節の i == 1 or 2 が、いつも成り立ってしまうのはこのためです。i が 1 でないとき、or の右側の 2 が条件として調べられ、2 は 0 ではないので True と同じ扱いになります。" },
+        { try: "r-truthy" },
+      ],
+    },
+    {
+      title: "▲再帰",
+      blocks: [
+        { h: "自分自身を呼び出す関数" },
+        { p: "関数の中から、その関数自身を呼び出すことを「再帰（さいき）」といい、そのような関数を「再帰的な関数」といいます。大きな問題を、同じ形の少し小さな問題を使って表せるときに便利です。" },
+        { p: "たとえば、1 から n までの合計 total(n) は、「n が 0 なら 0、そうでなければ n + total(n - 1)」と表せます。total(3) は 3 + total(2)、total(2) は 2 + total(1)、total(1) は 1 + total(0)、total(0) は 0 なので、total(3) = 3 + 2 + 1 + 0 = 6 です。" },
+        { p: "再帰的な関数には、必ず「もう自分を呼ばずに答えを返す場合」（ここでは n が 0 のとき）を if で書いておきます。これがないと、呼び出しがいつまでも続いて、エラーになります。" },
+        { code: "def total(n):\n    if n == 0:\n        return 0\n    return n + total(n - 1)\n\nprint(total(3))\nprint(total(10))", out: "6\n55" },
+        { try: "recursion" },
+      ],
+    },
+  ],
+  // 章の最後の演習問題: if と比べる演算子を組み合わせた関数(教材の練習にあたる、差の大きさ・3通りに分ける関数)
+  exercises: ["diff", "water_state"],
+};
