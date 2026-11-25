@@ -7,11 +7,13 @@ const SHOP =
 const CSV =
   PD + 'with open("shop.csv", "w", encoding="utf-8") as f:\n    f.write("item,price,stock\\napple,120,5\\nbanana,80,12\\ncherry,300,3\\ngrape,250,8\\n")\n';
 const TEAM =
-  PD + 'df = pd.DataFrame({\n    "name": ["Aki", "Ben", "Cho", "Dan", "Emi"],\n    "team": ["red", "white", "red", "white", "red"],\n    "score": [70, 85, 90, 85, 60],\n})\n';
+  PD + 'df = pd.DataFrame({\n    "name": ["Aki", "Ben", "Cho", "Dan", "Emi"],\n    "team": ["red", "white", "red", "white", "red"],\n    "score": [70, 85, 90, 80, 60],\n})\n';
 const SALES =
   PD + 'sales = pd.DataFrame({\n    "shop": ["east", "west", "east", "west", "east"],\n    "qty": [2, 1, 4, 3, 1],\n    "price": [100, 250, 100, 80, 300],\n})\n';
 const TEMPS =
   PD + 'with open("temps.csv", "w", encoding="utf-8") as f:\n    f.write("city,temp\\nSapporo,12\\nNaha,27\\nTokyo,21\\nSendai,16\\nFukuoka,23\\n")\n';
+const MEMBERS =
+  PD + 'members = pd.DataFrame({"id": [1, 2, 3], "name": ["Aki", "Ben", "Cho"]})\nvisits = pd.DataFrame({"id": [2, 1, 2, 3, 2], "minutes": [30, 45, 20, 60, 10]})\n';
 
 export const chapter: Chapter = {
   ref: "7-1",
@@ -23,7 +25,7 @@ export const chapter: Chapter = {
     "m-pd-filter", "l71-and", "l71-col", "l71-row",
     "m-pd-sort", "l71-sort2", "l71-describe",
     "l71-concat", "l71-merge", "m-pd-groupby", "l71-agg", "l71-na", "l71-date",
-    "l71-ex-total", "l71-ex-csv",
+    "l71-ex-total", "l71-ex-csv", "l71-ex-merge",
   ],
   lessons: [
     {
@@ -64,8 +66,8 @@ export const chapter: Chapter = {
         "CSV は、値をカンマで区切って並べた文字のファイルです。pd.read_csv(ファイル名) で、そのまま DataFrame にできます。",
         "df.head(n) は、先頭の n 行だけを見せます。",
       ],
-      example: PD + 'import io\nprint(pd.read_csv(io.StringIO("a,b\\n1,2\\n")))',
-      task: "最初の3行で作った shop.csv を pd.read_csv で読み、行の数を表示しよう。次に、先頭の2行を head で表示しよう。",
+      example: "",
+      task: "上のコードで作った shop.csv を pd.read_csv で読み、行の数を表示しよう。次に、先頭の2行を head で表示しよう。",
       starter: CSV,
       solution: CSV + 'df = pd.read_csv("shop.csv", encoding="utf-8")\nprint(len(df))\nprint(df.head(2))',
       wrong: CSV + 'df = pd.read_csv("shop.csv", encoding="utf-8")\nprint(len(df))\nprint(df.head())',
@@ -163,14 +165,14 @@ export const chapter: Chapter = {
       id: "l71-describe",
       title: "pandas：まとめて統計を見る",
       intro: ["df.describe() は、数の列それぞれについて、個数・平均・標準偏差・最小・四分位数・最大を、まとめて表にします。"],
-      example: PD + 'print(pd.Series([1, 2, 3]).describe()["mean"])',
-      task: "df の数の列の要約統計量を、describe で表示しよう。",
+      example: "",
+      task: "df の price の列に describe を使い、その結果から 50%（中央値）の値を取り出して表示しよう。",
       starter: SHOP,
-      solution: SHOP + "print(df.describe())",
-      wrong: SHOP + "print(df.mean(numeric_only=True))",
-      expect: "            price     stock\ncount    4.000000   4.00000\nmean   187.500000   7.00000\nstd    104.363148   3.91578\nmin     80.000000   3.00000\n25%    110.000000   4.50000\n50%    185.000000   6.50000\n75%    262.500000   9.00000\nmax    300.000000  12.00000",
+      solution: SHOP + 'print(df["price"].describe()["50%"])',
+      wrong: SHOP + 'print(df["price"].describe()["mean"])',
+      expect: "185.0",
       mustInclude: ["describe"],
-      hints: ["表全体に .describe() を使います。", "print(df.describe()) です。"],
+      hints: ['df["price"].describe() は、count や 50% をラベルにした Series です。', 'print(df["price"].describe()["50%"]) です。'],
       xp: 20,
     },
     {
@@ -205,12 +207,12 @@ export const chapter: Chapter = {
       id: "l71-agg",
       title: "pandas：グループごとに何種類も集計する",
       intro: ["groupby のあとに .agg([\"mean\", \"max\"]) を付けると、グループごとに、平均と最大のように何種類もの集計をまとめて計算できます。"],
-      example: TEAM + 'print(df.groupby("team")["score"].count().tolist())',
+      example: "",
       task: "team ごとの score の平均（mean）と最大（max）を、agg を使って1つの表にして表示しよう。",
       starter: TEAM,
       solution: TEAM + 'print(df.groupby("team")["score"].agg(["mean", "max"]))',
       wrong: TEAM + 'print(df.groupby("team")["score"].agg(["mean", "min"]))',
-      expect: "            mean  max\nteam\nred    73.333333   90\nwhite  85.000000   85",
+      expect: "            mean  max\nteam\nred    73.333333   90\nwhite  82.500000   85",
       mustInclude: ["groupby", "agg"],
       hints: ['df.groupby("team")["score"] で、チームごとの score になります。', 'print(df.groupby("team")["score"].agg(["mean", "max"])) です。'],
       xp: 30,
@@ -272,6 +274,20 @@ export const chapter: Chapter = {
       expect: "['Naha', 'Fukuoka', 'Tokyo']",
       mustInclude: ["read_csv", "sort_values"],
       hints: ['df = pd.read_csv("temps.csv", encoding="utf-8") で読み、df[df["temp"] >= 20] で行を選びます。', '選んだ表に .sort_values("temp", ascending=False)["city"].tolist() を付けて print します。'],
+      xp: 35,
+    },
+    {
+      id: "l71-ex-merge",
+      title: "演習：表を結びつけて、名前ごとに合計する",
+      intro: [],
+      example: "",
+      task: "members と visits を id の列で結びつけ、name ごとの minutes の合計を、.to_dict() で辞書にして表示しよう。",
+      starter: MEMBERS,
+      solution: MEMBERS + 't = pd.merge(visits, members, on="id")\nprint(t.groupby("name")["minutes"].sum().to_dict())',
+      wrong: MEMBERS + 'print(visits.groupby("id")["minutes"].sum().to_dict())',
+      expect: "{'Aki': 45, 'Ben': 60, 'Cho': 60}",
+      mustInclude: ["merge", "groupby"],
+      hints: ['t = pd.merge(visits, members, on="id") で、visits の各行に名前が付きます。', 'print(t.groupby("name")["minutes"].sum().to_dict()) です。'],
       xp: 35,
     },
   ],

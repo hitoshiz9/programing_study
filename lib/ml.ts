@@ -4,7 +4,7 @@ import { CHAPTER_ORDER, MODULES } from "./chapters/index.ts";
 // ステージ「AI(機械学習)」: NumPy → pandas → scikit-learn の順。形式は「書く」と同じ。
 // 章は東大教材の 5-3 / 7-1 / 7-2。文章は独自。
 const PD_STARTER =
-  'import pandas as pd\n\ndf = pd.DataFrame({\n    "name": ["ぴよ", "ミケ", "ポチ", "タマ"],\n    "team": ["赤", "白", "赤", "白"],\n    "score": [80, 65, 90, 75],\n})\n';
+  'import pandas as pd\n\ndf = pd.DataFrame({\n    "name": ["ぴよ", "ミケ", "ポチ", "タマ"],\n    "team": ["red", "white", "red", "white"],\n    "score": [80, 65, 90, 75],\n})\n';
 const LR_STARTER =
   "from sklearn.linear_model import LinearRegression\n\n# 勉強した時間(X) と テストの点数(y)\nX = [[1], [2], [3], [4], [5]]\ny = [50, 60, 70, 80, 90]\n";
 const LR_FITTED = LR_STARTER + "\nmodel = LinearRegression()\nmodel.fit(X, y)\n";
@@ -126,7 +126,7 @@ const BASE_ML: Lesson[] = [
     starter: PD_STARTER,
     solution: PD_STARTER + 'print(df.groupby("team")["score"].mean().to_dict())',
     wrong: PD_STARTER + 'print(df.groupby("team")["score"].sum().to_dict())',
-    expect: "{'白': 70.0, '赤': 85.0}",
+    expect: "{'red': 85.0, 'white': 70.0}",
     mustInclude: ["groupby"],
     hints: ['df.groupby("team")["score"] で、チームごとの score になります。', "そのあと .mean().to_dict() を付けて print します。"],
     xp: 30,
