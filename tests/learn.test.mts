@@ -19,7 +19,8 @@ const READ = new Map(READ_LESSONS.map((l) => [l.id, l]));
 const problems = (s: Section) => s.blocks.flatMap((b) => ("try" in b ? [b.try] : []));
 const codeOf = (id: string) => {
   const w = WRITE.get(id);
-  return w ? [w.example, w.starter, w.solution].join("\n") : (READ.get(id)?.code ?? "");
+  // 書く問題は、画面に出る最初のコードと、正解のコード(お手本の example は画面に出ないので対象外)
+  return w ? [w.starter, w.solution].join("\n") : (READ.get(id)?.code ?? "");
 };
 
 test("教科書: 自動テストの道具が正しく言葉を取り出す", () => {
@@ -27,6 +28,8 @@ test("教科書: 自動テストの道具が正しく言葉を取り出す", () 
   assert.ok(termsOf('print(1, end="")').includes("end="));
   assert.ok(!termsOf("def f(a):\n    return a\nprint(f(1))").includes("f"), "自分で作った関数は説明不要");
   assert.ok(!termsOf('print("a // b")').includes("//"), "文字列の中は対象外");
+  const mod = termsOf('f = open("greet.py", "w")\nf.write("def hello():\\n    return 1\\n")\nf.close()\nimport greet\nprint(greet.hello())');
+  assert.ok(!mod.includes("greet") && !mod.includes("hello") && mod.includes("open") && mod.includes("import"), "自分で作ったモジュールと関数は説明不要");
   assert.ok(mentions("/ は小数の答え", "/") && !mentions("// は商", "/"));
   assert.ok(!mentions("print する", "in"));
 });
