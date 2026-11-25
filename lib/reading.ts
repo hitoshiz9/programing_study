@@ -607,8 +607,8 @@ const BASE_READ: ReadLesson[] = [
     id: "r-local",
     title: "関数の中の名前と外の名前",
     intro: "関数の中で代入した名前は、関数の中だけのもの（ローカル変数）です。",
-    code: "x = 1\n\ndef f():\n    x = 5\n    return x\n\nprint(f(), x)",
-    choices: ["5 5", "5 1", "1 1"],
+    code: "x = 1\n\ndef f():\n    x = 5\n    return x\n\nprint(f())\nprint(x)",
+    choices: ["5\n5", "5\n1", "1\n1"],
     answer: 1,
     explain:
       "関数 f の中の x = 5 は、関数の中だけの x を作ります。そのため f() は 5 を返しますが、関数の外の x は 1 のまま変わりません。名前が同じでも、関数の中と外では別のもの、と考えましょう。こうなっているおかげで、関数の中で好きな名前を使っても、外の変数をうっかりこわさずに済みます。",
@@ -637,6 +637,43 @@ const BASE_READ: ReadLesson[] = [
     explain:
       "f(2) を呼ぶと、関数の中の print が動いて 3 が表示されます。ここまでは見たとおりです。ポイントは次の行で、f には return がないので、関数は None（「何もない」という意味の特別な値）を返します。そのため result は None になり、最後の print で None と表示されます。「画面に出す（print）」と「結果を返す（return）」は別のこと、と覚えておきましょう。",
     xp: 15,
+    ref: "1-2",
+  },
+  // ---- 1-2 の教科書の説明ごとに足した問題 ----
+  {
+    id: "r12-noreturn",
+    title: "return だけの関数",
+    intro: "return のうしろに何も書かないと、関数は None を返します。",
+    code: "def f(x):\n    return\n\ndef g(x):\n    return x * 2\n\nprint(f(3))\nprint(g(3))",
+    choices: ["3\n6", "6\n6", "None\n6"],
+    answer: 2,
+    explain:
+      "f は return のうしろに何も書いていないので、f(3) は None を返します。g は x * 2 を返すので、g(3) は 6 です。3 を選んだ人は、渡した値がそのまま返ると考えています。return のうしろに書いた式の値だけが返る、と覚えましょう。",
+    xp: 10,
+    ref: "1-2",
+  },
+  {
+    id: "r12-printin",
+    title: "関数の中の print はいつ動く？",
+    intro: "関数の中の print は、関数を呼び出したときに動きます。",
+    code: 'def g(x):\n    y = x * 4\n    print("y", y)\n    return y - 1\n\nprint(g(5))',
+    choices: ["y 20\n19", "19", "19\ny 20"],
+    answer: 0,
+    explain:
+      "最後の行で g(5) が呼び出されると、関数の中で y が 20 になり、中の print が「y 20」を表示します。そのあと 20 - 1 = 19 が返り、外の print が 19 を表示します。外の print は、g(5) の返値が分かってから動くので、19 はあとに出ます。19 だけを選んだ人は、関数の中の print を見落としています。",
+    xp: 10,
+    ref: "1-2",
+  },
+  {
+    id: "r12-comment",
+    title: "関数の中のコメントと空行",
+    intro: "コメントだけの行は、空行と同じで実行されません。",
+    code: "def h(x):\n    # x = x + 100\n    y = x * 2\n\n    return y\n\nprint(h(4))",
+    choices: ["208", "8", "108"],
+    answer: 1,
+    explain:
+      "2行目は # で始まるコメントなので実行されません。y は 4 * 2 = 8 で、空行のあとの return y で 8 が返ります。208 を選んだ人は、コメントの行も実行されると考えています。空行があっても、関数の中身は字下げが続くところまでです。",
+    xp: 10,
     ref: "1-2",
   },
   {
