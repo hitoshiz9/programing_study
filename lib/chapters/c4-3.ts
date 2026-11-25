@@ -6,7 +6,7 @@ export const chapter: Chapter = {
   title: "ディレクトリと木構造",
   url: "https://utokyo-ipp.github.io/4/4-3.html",
   stage: "write",
-  order: ["l43-makedirs", "l43-cwd", "l43-path", "l43-tree", "l43-lookup"],
+  order: ["l43-makedirs", "l43-cwd", "l43-path", "l43-tree", "l43-lookup", "l43-ex-count"],
   lessons: [
     {
       id: "l43-makedirs",
@@ -110,8 +110,40 @@ export const chapter: Chapter = {
       hints: ["node = tree から始めて、for part in path.split(\"/\"): のたびに node = node[part] で1段下へ進みます。", "くり返しが終わったときの node を return します。"],
       xp: 30,
     },
+    {
+      id: "l43-ex-count",
+      title: "演習: ディレクトリの中のファイルを数える",
+      intro: [],
+      example: "",
+      task: "ディレクトリのパス path を受け取り、その中にじかに入っているファイルの数（ディレクトリは数えない）を返す関数 count_files(path) を作ろう。os.listdir(path) で名前を取り出し、path + \"/\" + 名前 がディレクトリかどうかを os.path.isdir で調べます。",
+      starter:
+        'import os, shutil\nshutil.rmtree("lib43", ignore_errors=True)  # 前の実行で作ったものを消して、毎回作り直す\nos.makedirs("lib43/novel", exist_ok=True)\nos.makedirs("lib43/comic", exist_ok=True)\nfor name in ["lib43/memo.txt", "lib43/list.txt", "lib43/novel/a.txt"]:\n    with open(name, "w", encoding="utf-8") as f:\n        f.write("")\n\ndef count_files(path):\n    pass\n',
+      solution:
+        'import os, shutil\nshutil.rmtree("lib43", ignore_errors=True)  # 前の実行で作ったものを消して、毎回作り直す\nos.makedirs("lib43/novel", exist_ok=True)\nos.makedirs("lib43/comic", exist_ok=True)\nfor name in ["lib43/memo.txt", "lib43/list.txt", "lib43/novel/a.txt"]:\n    with open(name, "w", encoding="utf-8") as f:\n        f.write("")\n\ndef count_files(path):\n    n = 0\n    for name in os.listdir(path):\n        if not os.path.isdir(path + "/" + name):\n            n = n + 1\n    return n',
+      wrong:
+        'import os, shutil\nshutil.rmtree("lib43", ignore_errors=True)  # 前の実行で作ったものを消して、毎回作り直す\nos.makedirs("lib43/novel", exist_ok=True)\nos.makedirs("lib43/comic", exist_ok=True)\nfor name in ["lib43/memo.txt", "lib43/list.txt", "lib43/novel/a.txt"]:\n    with open(name, "w", encoding="utf-8") as f:\n        f.write("")\n\ndef count_files(path):\n    return len(os.listdir(path))',
+      expect: "2\n1\n0",
+      test: 'print(count_files("lib43"))\nprint(count_files("lib43/novel"))\nprint(count_files("lib43/comic"))',
+      mustInclude: ["listdir", "return"],
+      hints: [
+        "n = 0 から始め、for name in os.listdir(path): で名前を1つずつ調べます。",
+        "if not os.path.isdir(path + \"/\" + name): のときだけ n = n + 1 して、最後に return n です。",
+      ],
+      xp: 30,
+    },
   ],
   reads: [
+    {
+      id: "r43-abs",
+      title: "絶対パスと相対パス",
+      intro: "",
+      code: 'import os\nos.chdir("/home/pyodide")\nos.makedirs("r43abs", exist_ok=True)\nwith open("r43abs/note.txt", "w", encoding="utf-8") as f:\n    f.write("ここにある")\nos.chdir("r43abs")\nprint(os.path.exists("/home/pyodide/r43abs/note.txt"))\nprint(os.path.exists("r43abs/note.txt"))\nos.chdir("/home/pyodide")',
+      choices: ["True\nTrue", "True\nFalse", "False\nTrue"],
+      answer: 1,
+      explain:
+        "/ から始まる \"/home/pyodide/r43abs/note.txt\" は絶対パスなので、カレントディレクトリがどこでも同じ場所を指し、ファイルが見つかって True です。\"r43abs/note.txt\" は相対パスなので、今いる r43abs の中から探します。r43abs の中に、さらに r43abs というディレクトリはないので False です。相対パスは、カレントディレクトリが変わると指す場所も変わります。",
+      xp: 15,
+    },
     {
       id: "r43-where",
       title: "ファイルはどこにある？",
@@ -146,55 +178,8 @@ export const chapter: Chapter = {
       xp: 15,
     },
   ],
-  explain: {
-    "l43-makedirs": [
-      { h: "ディレクトリと階層" },
-      { p: "パソコンの中のファイルは、ディレクトリ（フォルダとも呼びます）に分けてしまわれています。ディレクトリの中には、ファイルだけでなく、別のディレクトリも入れられます。そのため、ディレクトリの中のディレクトリの中のファイル、というように何段にも重なった階層ができます。これは Python だけの話ではなく、Windows・macOS・Linux など、どの OS にも共通するしくみです。" },
-      { p: "階層は、次のように字下げした図で表すと分かりやすくなります。いちばん末端にあるのがファイルで、途中で枝分かれしているのがディレクトリです。" },
-      { code: 'print("school")\nprint("├── math")\nprint("│   └── test.txt")\nprint("└── memo.txt")', out: "school\n├── math\n│   └── test.txt\n└── memo.txt" },
-      { h: "Python でディレクトリを扱う" },
-      { p: "os モジュールには、ディレクトリを扱う道具がそろっています。os.makedirs() はディレクトリを作り、exist_ok=True を付けると、すでにあってもエラーにしません。os.listdir() は中にある名前の一覧を返し、os.path.isdir() はそれがディレクトリかどうかを調べます。" },
-      { code: 'import os\nos.makedirs("ex43/docs", exist_ok=True)\nwith open("ex43/readme.txt", "w", encoding="utf-8") as f:\n    f.write("説明")\nfor name in sorted(os.listdir("ex43")):\n    print(name, os.path.isdir("ex43/" + name))', out: "docs True\nreadme.txt False" },
-      { p: "starter の shutil.rmtree() は、ディレクトリを中身ごと消す命令です。この問題では、前の実行で作ったファイルが残らないように使っています。中身ごと消えて元に戻せないので、ふだん使うときは消す場所をよく確かめましょう。" },
-    ],
-    "l43-cwd": [
-      { h: "プログラムはどこかで動いている" },
-      { p: "プログラムは、必ずどこかのディレクトリを「今いる場所」として動いています。これをワーキングディレクトリ（作業ディレクトリ）といい、実行している今の場所という意味で、カレントディレクトリとも呼びます。ファイル名だけで open したときに探されるのは、このカレントディレクトリです。" },
-      { p: "アプリを起動したときにどこがカレントディレクトリになるかは、OS や起動のしかたによって違います。このアプリの Python では、最初は /home/pyodide がカレントディレクトリです。" },
-      { h: "移動する" },
-      { p: "os.chdir() でカレントディレクトリを変えられます。移動したあとは、ファイル名だけで開くと、移動先のディレクトリの中を探します。移動したら、用事が終わったときに元の場所へ戻しておくと、あとのコードが混乱しません。カレントディレクトリは . という記号でも表せるので、os.path.abspath(\".\") でも今の場所を調べられます。" },
-      { code: 'import os\nos.chdir("/home/pyodide")\nos.makedirs("ex43/docs", exist_ok=True)\nos.chdir("ex43/docs")\nprint(os.path.abspath("."))\nos.chdir("../..")\nprint(os.path.abspath("."))', out: "/home/pyodide/ex43/docs\n/home/pyodide" },
-      { p: "\"../..\" は、1段上のさらに1段上、つまり2段上に戻るという意味です。" },
-    ],
-    "l43-path": [
-      { h: "パスは道順" },
-      { p: "open の1つめの引数のように、ファイルやディレクトリの場所を表す書き方をパス（道すじ）といいます。/ で区切りながら、どのディレクトリへ進むかを1歩ずつ書いていくことから、こう呼ばれます。" },
-      { p: "いちばん上の階層をルートディレクトリといい、/ だけで表します。/ から始まるパスは、ルートから数えた住所なので、どこから使っても同じ場所を指します。これを絶対パスといいます。/ 以外から始まるパスは、カレントディレクトリから数えた道順で、相対パスといいます。相対パスの先頭には、自動で ./（今いる場所）が補われると考えられます。ここまでは macOS や Linux、このアプリの決まりです。Windows では、絶対パスは C:\\Users\\piyo のようにドライブの名前（C: など）から始まり、区切りに \\ を使います。" },
-      { code: 'import os\nos.chdir("/home/pyodide")\nos.makedirs("ex43/docs", exist_ok=True)\nwith open("ex43/docs/a.txt", "w", encoding="utf-8") as f:\n    f.write("同じファイル")\nfor path in ["ex43/docs/a.txt", "./ex43/docs/a.txt", "/home/pyodide/ex43/docs/a.txt"]:\n    with open(path, "r", encoding="utf-8") as f:\n        print(f.read())', out: "同じファイル\n同じファイル\n同じファイル" },
-      { p: ".. は1段上のディレクトリを表します。下へ進む名前と組み合わせると、となりのディレクトリへ移るなど、自由に道順を書けます。ex43/docs/.. は ex43 と同じ場所です。カレントディレクトリにないファイルを名前だけで開こうとすると FileNotFoundError になるので、そのときはパスが正しいかを確かめましょう。" },
-    ],
-    "l43-tree": [
-      { h: "木構造の言葉" },
-      { p: "ディレクトリの階層は、根元から枝が分かれていく木を、上下逆さにした形をしています。そのため木構造、または単に木（tree）と呼ばれます。いちばん上を根（root）、枝分かれの先にあって、それより下がないものを葉（leaf）といい、木を作っている1つ1つ（ここではファイルやディレクトリ）をノード（node）といいます。" },
-      { p: "中に入れている側を親（parent）、入れられている側を子（child）、同じ親を持つ子同士を兄弟（sibling）と呼びます。親の親、そのまた親……とさかのぼったものをまとめて祖先（ancestor）、子の子、そのまた子……と下りていったものをまとめて子孫（descendant）といいます。" },
-      { code: 'tree = {"root": {"a": {"a1": "葉"}, "b": "葉"}}\nprint("root の子:", list(tree["root"]))\nprint("a の子:", list(tree["root"]["a"]))', out: "root の子: ['a', 'b']\na の子: ['a1']" },
-      { p: "この例では、a と b は root の子で、おたがいに兄弟です。a1 は a の子で、root から見ると子孫です。b と a1 は葉です。" },
-    ],
-    "l43-lookup": [
-      { h: "データを木で表す" },
-      { p: "木構造は、ディレクトリだけでなく、いろいろなデータを整理するのに使われます。Python では、辞書やリストの中に辞書やリストを入れた入れ子のデータが、そのまま木になっています。たとえば、ディレクトリを辞書、ファイルを中身の文字列で表すと、ディレクトリの階層をまるごと1つの辞書にできます。" },
-      { p: "このとき、パス photo/2025/umi.jpg をたどることは、tree[\"photo\"][\"2025\"][\"umi.jpg\"] と [ ] を重ねることに対応します。パスの / が、ちょうど [ ] の区切りになっているわけです。" },
-      { code: 'tree = {"photo": {"2025": {"umi.jpg": "海の写真"}}}\nprint(tree["photo"]["2025"]["umi.jpg"])\nprint(tree["photo"]["2025"])', out: "海の写真\n{'umi.jpg': '海の写真'}" },
-      { p: "途中で止めると、その下の部分の木（部分木）が取り出せます。データを階層に分けて管理したいときは、全体を1つの木として表せないか考えてみましょう。" },
-    ],
-  },
-  topics: [
-    ["ディレクトリと階層構造", ["l43-makedirs"]],
-    ["カレントワーキングディレクトリ", ["l43-cwd"]],
-    ["パス", ["l43-path", "r43-where", "r43-dotdot"]],
-    ["木構造", ["l43-tree", "r43-tree"]],
-    ["データ表現としての木構造", ["l43-lookup"]],
-  ],
+  explain: {},
+  topics: [],
   refSections: 5,
   refProse: 2174,
 };
