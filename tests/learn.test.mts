@@ -10,6 +10,8 @@ import { termsOf, mentions } from "../lib/learn/terms.ts";
 import { LESSONS } from "../lib/lessons.ts";
 import { ML_LESSONS } from "../lib/ml.ts";
 import { READ_LESSONS } from "../lib/reading.ts";
+import { EXPLAIN } from "../lib/explain.ts";
+import { CHAPTER_ORDER } from "../lib/chapters/index.ts";
 
 const py = await loadPyodide({ indexURL: resolve("public/pyodide") + "/" });
 const WRITE = new Map([...LESSONS, ...ML_LESSONS].map((l) => [l.id, l]));
@@ -29,9 +31,27 @@ test("教科書: 自動テストの道具が正しく言葉を取り出す", () 
   assert.ok(!mentions("print する", "in"));
 });
 
+// まだ教科書に作り直していない章の、古い説明の文章(作り直しの途中だけ、前の章の知識として数える)
+const legacyProse = (ref: string) =>
+  [
+    ...[...WRITE.values()].filter((l) => l.ref === ref).flatMap((l) => [...l.intro, ...(EXPLAIN[l.id] ?? []).map((b) => ("h" in b ? b.h : "p" in b ? b.p : ""))]),
+    ...[...READ.values()].filter((l) => l.ref === ref).flatMap((l) => [l.intro, l.explain]),
+  ].join("\n");
+
+test("教科書: 作り直していない章(移行中)", () => {
+  // 全章を作り直したら空になる。ここに章が残っている間は公開しない
+  const pending = CHAPTER_ORDER.filter((r) => r !== "A-jupyter" && !LEARN.some((c) => c.ref === r));
+  console.log("作り直していない章:", pending.join(", ") || "なし");
+});
+
 // 前の章の説明も「習ったこと」に入れる
 let learned = "";
-for (const ch of LEARN) {
+for (const ref of CHAPTER_ORDER) {
+  const ch = LEARN.find((c) => c.ref === ref);
+  if (!ch) {
+    learned += "\n" + legacyProse(ref);
+    continue;
+  }
   if (ch.guide) {
     test(`教科書 ${ch.ref}: アプリの使い方の章は短く(2節まで)、問題も演習問題もない`, () => {
       assert.ok(ch.sections.length > 0 && ch.sections.length <= 2);
