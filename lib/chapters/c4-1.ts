@@ -115,7 +115,7 @@ export const chapter: Chapter = {
         "関数の中でファイルを開いたら、return で関数を抜ける前に close() で閉じておきます。return のあとに書いた close() は動きません。",
       ],
       example: 'f = open("abc41.txt", "w", encoding="utf-8")\nf.write("ABA")\nf.close()\n\nf = open("abc41.txt", "r", encoding="utf-8")\ns = f.read()\nf.close()\nprint(s.count("A"))',
-      task: "ファイル名 name と1文字 ch を受け取り、そのファイルの中に ch が何回出てくるかを返す関数 count_in_file(name, ch) を作ろう。read() でまとめて読み、return する前にファイルを閉じます。",
+      task: "ファイル名 name と1文字 ch を受け取り、そのファイルの中に ch が何回出てくるかを返す関数 count_in_file(name, ch) を作ろう。read() でまとめて読みます。",
       starter: "def count_in_file(name, ch):\n    pass\n",
       solution:
         'def count_in_file(name, ch):\n    f = open(name, "r", encoding="utf-8")\n    s = f.read()\n    f.close()\n    return s.count(ch)',
@@ -162,6 +162,7 @@ export const chapter: Chapter = {
       wrong: 'with open("todo41.txt", "w", encoding="utf-8") as f:\n    print("買い物", "洗たく", file=f)',
       expect: "買い物\n洗たく",
       test: 'with open("todo41.txt", "r", encoding="utf-8") as g:\n    print(g.read(), end="")',
+      mustInclude: ["file="],
       hints: ["print(\"買い物\", file=f) のように、file=f を付けた print を2回書きます。", "1回の print にカンマで2つ渡すと、同じ行に空白区切りで書かれてしまいます。"],
       xp: 20,
     },
@@ -182,6 +183,7 @@ export const chapter: Chapter = {
         'with open("log41.txt", "w", encoding="utf-8") as f:\n    print("1日目: 10分", file=f)\n\nwith open("log41.txt", "w", encoding="utf-8") as f:\n    print("2日目: 25分", file=f)',
       expect: "1日目: 10分\n2日目: 25分",
       test: 'with open("log41.txt", "r", encoding="utf-8") as g:\n    print(g.read(), end="")',
+      mustInclude: ['"a"'],
       hints: ["モードを \"a\" にして開きます。\"w\" で開くと、1日目の行が消えてしまいます。", "with open(\"log41.txt\", \"a\", encoding=\"utf-8\") as f: の中で print(\"2日目: 25分\", file=f) です。"],
       xp: 20,
     },
@@ -215,16 +217,16 @@ export const chapter: Chapter = {
         "open の encoding= で文字コードを指定します。書いたときと同じ文字コードで読まないと、エラーになったり文字化けしたりします。",
       ],
       example: 'with open("abc41.txt", "w", encoding="utf-8") as f:\n    f.write("あいう")\n\nwith open("abc41.txt", "r", encoding="utf-8") as f:\n    print(f.read())',
-      task: "最初のコードは、「さくら」を Shift_JIS（encoding=\"shift_jis\"）で sj41.txt に書き込みます。このファイルを正しい文字コードを指定して開き、read() で中身を表示しよう。",
+      task: "最初のコードは、さくら という文字を ej41.txt に書き込みます。このファイルを、書いたときと同じ文字コードを指定して \"r\" で開き、read() で中身を表示しよう。",
       starter:
-        'with open("sj41.txt", "w", encoding="shift_jis") as f:\n    f.write("さくら")\n\n# ここに、sj41.txt を読んで表示するコードを書こう\n',
+        'with open("ej41.txt", "w", encoding="euc_jp") as f:\n    f.write("さくら")\n\n# ここに、ej41.txt を読んで表示するコードを書こう\n',
       solution:
-        'with open("sj41.txt", "w", encoding="shift_jis") as f:\n    f.write("さくら")\n\nwith open("sj41.txt", "r", encoding="shift_jis") as f:\n    print(f.read())',
+        'with open("ej41.txt", "w", encoding="euc_jp") as f:\n    f.write("さくら")\n\nwith open("ej41.txt", "r", encoding="euc_jp") as f:\n    print(f.read())',
       wrong:
-        'with open("sj41.txt", "w", encoding="shift_jis") as f:\n    f.write("さくら")\n\nwith open("sj41.txt", "r", encoding="utf-8") as f:\n    print(f.read())',
+        'with open("ej41.txt", "w", encoding="euc_jp") as f:\n    f.write("さくら")\n\nwith open("ej41.txt", "r", encoding="shift_jis") as f:\n    print(f.read())',
       expect: "さくら",
       mustInclude: ["read"],
-      hints: ["書いたときと同じ encoding=\"shift_jis\" を指定して開きます。", "with open(\"sj41.txt\", \"r\", encoding=\"shift_jis\") as f: の中で print(f.read()) です。"],
+      hints: ["書いたときの open に付いている encoding= を見て、同じものを指定します。", "with open(\"ej41.txt\", \"r\", encoding=\"euc_jp\") as f: の中で print(f.read()) です。"],
       xp: 20,
     },
     {
@@ -288,7 +290,7 @@ export const chapter: Chapter = {
       choices: ["'メモ'\n'メモ'", "''\n'メモ'", "''\n''"],
       answer: 1,
       explain:
-        "f.write(\"メモ\") で書いた文字は、f を close するまで、まだファイルには入っていません。そのため、close の前に別のファイルオブジェクト g で読むと、中身は空の '' です。f.close() のあとで開き直して読むと、'メモ' が入っています。書いたら閉じる、を忘れないようにしましょう。",
+        "f.write(\"メモ\") のような少しの文字は、ふつう f を close するまで、まだファイルには入っていません。そのため、close の前に別のファイルオブジェクト g で読むと、中身は空の '' です。f.close() のあとで開き直して読むと、'メモ' が入っています。書いたら閉じる、を忘れないようにしましょう。",
       xp: 15,
     },
     {
@@ -360,12 +362,12 @@ export const chapter: Chapter = {
     {
       id: "r41-rstrip",
       title: "rstrip の引数のあるなし",
-      intro: "\"ねこ \\n\\n\" は、ねこ・空白・改行・改行 の順に並んだ文字列です。",
-      code: 's = "ねこ \\n\\n"\nprint(repr(s.rstrip()))\nprint(repr(s.rstrip("\\n")))',
-      choices: ["'ねこ '\n'ねこ'", "'ねこ'\n'ねこ '", "'ねこ'\n'ねこ \\n'"],
-      answer: 1,
+      intro: "\"とり\\t\\n\\n\\n\" は、とり・タブ・改行3つ の順に並んだ文字列です。",
+      code: 's = "とり\\t\\n\\n\\n"\nprint(repr(s.rstrip()))\nprint(repr(s.rstrip("\\n")))',
+      choices: ["'とり\\t'\n'とり'", "'とり'\n'とり\\t\\n\\n'", "'とり'\n'とり\\t'"],
+      answer: 2,
       explain:
-        "引数なしの rstrip() は、右端にある空白や改行をまとめて取りのぞくので 'ねこ' になります。rstrip(\"\\n\") は改行だけを右端から取りのぞき、空白にぶつかったところで止まるので 'ねこ ' が残ります。改行が2つあっても両方消えるので、「1つだけ消す」わけではないことにも注意しましょう。readline() の行には改行が多くても1つしかないので、rstrip(\"\\n\") で十分です。",
+        "引数なしの rstrip() は、右端にあるタブや空白や改行をまとめて取りのぞくので 'とり' になります。rstrip(\"\\n\") は改行だけを右端から取りのぞき、タブにぶつかったところで止まるので 'とり\\t' が残ります。改行が3つあっても全部消えるので、「1つだけ消す」わけではないことにも注意しましょう。readline() の行には改行が多くても1つしかないので、rstrip(\"\\n\") で十分です。",
       xp: 15,
     },
   ],
