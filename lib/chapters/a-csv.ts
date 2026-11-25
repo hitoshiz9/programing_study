@@ -1,11 +1,11 @@
 import type { Chapter } from "./types.ts";
 
 // 付録：CSVファイルの入出力。ファイルは毎回書いてから読む(ブラウザの中の仮のファイル置き場)。
-const SCORES = 'with open("scores-csv.csv", "w", encoding="utf-8") as f:\n    f.write("80,72,95\\n60,88,70\\n")\n\n';
+const SCORES = 'with open("scores-csv.csv", "w", encoding="utf-8") as f:\n    f.write("名前,点数\\nぴよ,80\\nミケ,95\\nポチ,70\\n")\n\n';
 const SHOP = 'with open("shop-csv.csv", "w", encoding="utf-8") as f:\n    f.write("りんご,120,3\\nみかん,50,10\\n")\n\n';
 const TEMPS = 'with open("temp-csv.csv", "w", encoding="utf-8") as f:\n    f.write("月,気温\\n1,5.2\\n2,6.1\\n3,9.4\\n")\n\n';
-const MONTHLY =
-  'import csv\n\n# 3年分の、月ごとの気温の記録を作る（年, 月, 気温 の3列）\nwith open("monthly-csv.csv", "w", encoding="utf-8", newline="") as f:\n    w = csv.writer(f)\n    for year in [2021, 2022, 2023]:\n        for month in range(1, 13):\n            w.writerow([year, month, round(5 + month * 2 + (year - 2021) * 0.3, 1)])\n\n';
+const SALES =
+  'import csv\n\n# ある店の3年分の、月ごとの売上の記録を作る（年, 月, 売上 の3列）\nwith open("sales-csv.csv", "w", encoding="utf-8", newline="") as f:\n    w = csv.writer(f)\n    for year in [2021, 2022, 2023]:\n        for month in range(1, 13):\n            w.writerow([year, month, 100 + month * 10 + (year - 2021) * 5])\n\n';
 const PEOPLE =
   'import csv\n\nwith open("people-csv.csv", "w", encoding="utf-8", newline="") as f:\n    w = csv.writer(f)\n    w.writerow(["名前", "年れい", "町"])\n    w.writerow(["ぴよ", 3, "北町"])\n    w.writerow(["ミケ", 5, "南町"])\n\n';
 
@@ -14,20 +14,34 @@ export const chapter: Chapter = {
   title: "付録：CSVファイルの入出力",
   url: "https://utokyo-ipp.github.io/appendix/4-csv.html",
   stage: "write",
-  order: ["csv-line", "csv-close", "csv-for", "csv-with", "csv-writer", "csv-july", "csv-reader", "csv-extract", "csv-rowsum"],
+  order: ["csv-line", "csv-stop", "csv-close", "csv-with", "csv-writer", "csv-july", "csv-for", "csv-reader", "csv-extract", "csv-rowsum"],
   lessons: [
     {
       id: "csv-close",
-      title: "next で読んで close で閉じる",
-      intro: ["open で開いたファイルは、使い終わったら close で閉じます。"],
+      title: "next のくり返しを for 文に直す",
+      intro: ["for row in reader: なら、行の数を気にせずに全部の行を読めます。"],
+      example: 'import csv\n\nwith open("ab-csv.csv", "w", encoding="utf-8") as f:\n    f.write("1,2\\n")\nf = open("ab-csv.csv", "r", encoding="utf-8")\nfor row in csv.reader(f):\n    print(row)\nf.close()',
+      task: "pair-csv.csv は2行のファイルなので、このコードは3回目の next で StopIteration になります。3つの print(next(reader)) を for 文に書きかえて、エラーなしで全部の行のリストを1行ずつ表示しよう。最後の f.close() は残します。",
+      starter: 'import csv\n\nwith open("pair-csv.csv", "w", encoding="utf-8") as f:\n    f.write("赤,3\\n青,5\\n")\nf = open("pair-csv.csv", "r", encoding="utf-8")\nreader = csv.reader(f)\nprint(next(reader))\nprint(next(reader))\nprint(next(reader))\nf.close()\n',
+      solution: 'import csv\n\nwith open("pair-csv.csv", "w", encoding="utf-8") as f:\n    f.write("赤,3\\n青,5\\n")\nf = open("pair-csv.csv", "r", encoding="utf-8")\nreader = csv.reader(f)\nfor row in reader:\n    print(row)\nf.close()',
+      wrong: 'import csv\n\nwith open("pair-csv.csv", "w", encoding="utf-8") as f:\n    f.write("赤,3\\n青,5\\n")\nf = open("pair-csv.csv", "r", encoding="utf-8")\nreader = csv.reader(f)\nfor row in reader:\n    print(row[0])\nf.close()',
+      expect: "['赤', '3']\n['青', '5']",
+      mustInclude: ["for", "close()"],
+      hints: ["3つの print(next(reader)) の行を消して、for row in reader: と書きます。", "for 文の中を字下げして print(row) です。"],
+      xp: 20,
+    },
+    {
+      id: "csv-stop",
+      title: "next を呼ぶ回数を直す",
+      intro: ["ファイルの行の数より多く next を呼ぶと StopIteration になります。"],
       example: 'import csv\n\nwith open("ab-csv.csv", "w", encoding="utf-8") as f:\n    f.write("1,2\\n")\nf = open("ab-csv.csv", "r", encoding="utf-8")\nreader = csv.reader(f)\nprint(next(reader))\nf.close()',
-      task: "team-csv.csv は3行のファイルです（4回 next を呼ぶと StopIteration になります）。開いてある f から作った reader で、next を使って3行目までを順に読み、3行目のリストだけを表示しよう。最後に f.close() でファイルを閉じます。",
-      starter: 'import csv\n\nwith open("team-csv.csv", "w", encoding="utf-8") as f:\n    f.write("赤,3\\n青,5\\n白,2\\n")\nf = open("team-csv.csv", "r", encoding="utf-8")\nreader = csv.reader(f)\n# ここに書こう\n',
-      solution: 'import csv\n\nwith open("team-csv.csv", "w", encoding="utf-8") as f:\n    f.write("赤,3\\n青,5\\n白,2\\n")\nf = open("team-csv.csv", "r", encoding="utf-8")\nreader = csv.reader(f)\nnext(reader)\nnext(reader)\nprint(next(reader))\nf.close()',
-      wrong: 'import csv\n\nwith open("team-csv.csv", "w", encoding="utf-8") as f:\n    f.write("赤,3\\n青,5\\n白,2\\n")\nf = open("team-csv.csv", "r", encoding="utf-8")\nreader = csv.reader(f)\nnext(reader)\nprint(next(reader))\nf.close()',
-      expect: "['白', '2']",
-      mustInclude: ["next(", "close()"],
-      hints: ["next(reader) を2回呼ぶと、1行目と2行目が読み進められます。", "3回目の print(next(reader)) で3行目を表示し、最後に f.close() です。"],
+      task: "team-csv.csv は3行のファイルなので、このコードは StopIteration で止まり、最後の f.close() まで進みません。next の数を直して、3行全部のリストを1行ずつ表示し、ファイルを閉じるようにしよう。",
+      starter: 'import csv\n\nwith open("team-csv.csv", "w", encoding="utf-8") as f:\n    f.write("赤,3\\n青,5\\n白,2\\n")\nf = open("team-csv.csv", "r", encoding="utf-8")\nreader = csv.reader(f)\nprint(next(reader))\nprint(next(reader))\nprint(next(reader))\nprint(next(reader))\nf.close()\n',
+      solution: 'import csv\n\nwith open("team-csv.csv", "w", encoding="utf-8") as f:\n    f.write("赤,3\\n青,5\\n白,2\\n")\nf = open("team-csv.csv", "r", encoding="utf-8")\nreader = csv.reader(f)\nprint(next(reader))\nprint(next(reader))\nprint(next(reader))\nf.close()',
+      wrong: 'import csv\n\nwith open("team-csv.csv", "w", encoding="utf-8") as f:\n    f.write("赤,3\\n青,5\\n白,2\\n")\nf = open("team-csv.csv", "r", encoding="utf-8")\nreader = csv.reader(f)\nprint(next(reader))\nprint(next(reader))\nf.close()',
+      expect: "['赤', '3']\n['青', '5']\n['白', '2']",
+      mustInclude: ["close()"],
+      hints: ["ファイルは3行なので、next を呼べるのは3回までです。", "4つめの print(next(reader)) の行を消します。"],
       xp: 20,
     },
     {
@@ -50,20 +64,24 @@ export const chapter: Chapter = {
     },
     {
       id: "csv-reader",
-      title: "csv.reader で読む",
-      intro: [
-        "csv モジュールの csv.reader(ファイルオブジェクト) で、CSV を読むための道具（CSV リーダ）が作れます。next(リーダ) を呼ぶたびに、1行ぶんの値が文字列のリストで返ってきます。",
-        "読んだ値は数に見えても文字列です。計算するときは int() や float() で数に変えます。",
-      ],
-      example: 'import csv\n\nwith open("ab-csv.csv", "w", encoding="utf-8") as f:\n    f.write("1,2\\n")\nwith open("ab-csv.csv", "r", encoding="utf-8") as f:\n    reader = csv.reader(f)\n    print(next(reader))',
-      task: "scores-csv.csv の1行目を next() で読み、そのリストを表示しよう。続けて、その行の0番目と2番目（0 から数えた番号）の値を整数にして足した結果を表示しよう。",
-      starter: "import csv\n\n" + SCORES + 'with open("scores-csv.csv", "r", encoding="utf-8") as f:\n    reader = csv.reader(f)\n    # ここに書こう\n',
-      solution: "import csv\n\n" + SCORES + 'with open("scores-csv.csv", "r", encoding="utf-8") as f:\n    reader = csv.reader(f)\n    row = next(reader)\n    print(row)\n    print(int(row[0]) + int(row[2]))',
-      wrong: "import csv\n\n" + SCORES + 'with open("scores-csv.csv", "r", encoding="utf-8") as f:\n    reader = csv.reader(f)\n    row = next(reader)\n    print(row)\n    print(row[0] + row[2])',
-      expect: "['80', '72', '95']\n175",
-      mustInclude: ["next("],
-      hints: ["row = next(reader) で1行目がリストになります。", "row[0] と row[2] は文字列なので、int(row[0]) + int(row[2]) のように整数にしてから足します。"],
-      xp: 25,
+      title: "読んで合計し、結果を書く",
+      intro: ["見出しを飛ばして読み、数に変えて足し、結果を別の CSV に書きます。"],
+      example: 'import csv\n\nwith open("ab-csv.csv", "w", encoding="utf-8") as f:\n    f.write("x\\n1\\n")\nwith open("ab-csv.csv", "r", encoding="utf-8") as f:\n    reader = csv.reader(f)\n    next(reader)\n    print(next(reader))',
+      task: "scores-csv.csv は、1行目が見出し「名前,点数」で、2行目から名前と点数が並んでいます。見出しを next で飛ばし、for 文で点数を全部整数にして足そう。そのあと、csv.writer で total-csv.csv に「合計,（足した数）」の1行を書きこもう。書いたあとのファイルの中身で判定します。",
+      starter: "import csv\n\n" + SCORES + "# ここに書こう\n",
+      solution:
+        "import csv\n\n" +
+        SCORES +
+        'total = 0\nwith open("scores-csv.csv", "r", encoding="utf-8") as f:\n    reader = csv.reader(f)\n    next(reader)\n    for row in reader:\n        total += int(row[1])\nwith open("total-csv.csv", "w", encoding="utf-8", newline="") as f:\n    w = csv.writer(f)\n    w.writerow(["合計", total])',
+      wrong:
+        "import csv\n\n" +
+        SCORES +
+        'total = 0\nwith open("scores-csv.csv", "r", encoding="utf-8") as f:\n    reader = csv.reader(f)\n    for row in reader:\n        total += len(row[1])\nwith open("total-csv.csv", "w", encoding="utf-8", newline="") as f:\n    w = csv.writer(f)\n    w.writerow(["合計", total])',
+      expect: "合計,245",
+      test: 'with open("total-csv.csv", "r", encoding="utf-8") as g:\n    print(g.read(), end="")',
+      mustInclude: ["next(", "writerow"],
+      hints: ["読むほうは、reader = csv.reader(f) のあと next(reader) で見出しを飛ばし、for row in reader: の中で total += int(row[1]) です。", "書くほうは、open に \"w\" と newline=\"\" を付けて開き、w = csv.writer(f) のあと w.writerow([\"合計\", total]) です。"],
+      xp: 35,
     },
     {
       id: "csv-for",
@@ -93,7 +111,7 @@ export const chapter: Chapter = {
       solution: "import csv\n\n" + TEMPS + 'with open("temp-csv.csv", "r", encoding="utf-8") as f:\n    reader = csv.reader(f)\n    next(reader)\n    total = 0\n    count = 0\n    for row in reader:\n        total += float(row[1])\n        count += 1\nprint(round(total / count, 1))',
       wrong: "import csv\n\n" + TEMPS + 'with open("temp-csv.csv", "r", encoding="utf-8") as f:\n    reader = csv.reader(f)\n    next(reader)\n    total = 0\n    count = 0\n    for row in reader:\n        total += float(row[1])\n        count += 1\nprint(round(total / 4, 1))',
       expect: "6.9",
-      mustInclude: ["with", "float"],
+      mustInclude: ["next(", "float"],
       hints: ["reader = csv.reader(f) のあと next(reader) で見出しを飛ばします。気温は小数なので float(row[1]) で数にします。", "合計 total と個数 count を数えて、print(round(total / count, 1)) です。"],
       xp: 25,
     },
@@ -116,18 +134,18 @@ export const chapter: Chapter = {
     },
     {
       id: "csv-july",
-      title: "長い記録から決まった行を取り出す",
+      title: "売上の記録から12月だけを取り出す",
       intro: [
         "何年分もの記録が入った CSV から、必要な行だけを取り出すことはよくあります。for 文で1行ずつ読み、if 文で条件に合う行だけを選びます。",
       ],
-      example: 'row = ["2021", "7", "19.0"]\nif row[1] == "7":\n    print("7月の行です")',
-      task: "monthly-csv.csv には「年, 月, 気温」が3年分（36行）入っています。月が 7 の行だけを選んで、年と気温を空白で区切って表示しよう。",
-      starter: MONTHLY + "# ここに書こう\n",
-      solution: MONTHLY + 'with open("monthly-csv.csv", "r", encoding="utf-8") as f:\n    for row in csv.reader(f):\n        if row[1] == "7":\n            print(row[0], row[2])',
-      wrong: MONTHLY + 'with open("monthly-csv.csv", "r", encoding="utf-8") as f:\n    for row in csv.reader(f):\n        if row[1] == 7:\n            print(row[0], row[2])',
-      expect: "2021 19.0\n2022 19.3\n2023 19.6",
+      example: 'row = ["2021", "6", "210"]\nif row[1] == "6":\n    print("6月の行です")',
+      task: "sales-csv.csv には、ある店の「年, 月, 売上（万円）」が3年分（36行）入っています。月が 12 の行だけを選んで、年と売上を空白で区切って表示しよう。",
+      starter: SALES + "# ここに書こう\n",
+      solution: SALES + 'with open("sales-csv.csv", "r", encoding="utf-8") as f:\n    for row in csv.reader(f):\n        if row[1] == "12":\n            print(row[0], row[2])',
+      wrong: SALES + 'with open("sales-csv.csv", "r", encoding="utf-8") as f:\n    for row in csv.reader(f):\n        if row[1] == 12:\n            print(row[0], row[2])',
+      expect: "2021 220\n2022 225\n2023 230",
       mustInclude: ["csv.reader", "if"],
-      hints: ["CSV から読んだ値は文字列なので、月は row[1] == \"7\"（または int(row[1]) == 7）とくらべます。", "条件に合ったら print(row[0], row[2]) で年と気温を表示します。"],
+      hints: ["CSV から読んだ値は文字列なので、月は row[1] == \"12\"（または int(row[1]) == 12）とくらべます。", "条件に合ったら print(row[0], row[2]) で年と売上を表示します。"],
       xp: 30,
     },
     {
@@ -174,12 +192,12 @@ export const chapter: Chapter = {
     {
       id: "rcsv-str",
       title: "CSV の値は文字列",
-      intro: "csv.reader で読んだ値は、どれも文字列です。+ が何をするか考えよう。",
-      code: 'import csv\n\nwith open("rcsv-a.csv", "w", encoding="utf-8") as f:\n    f.write("1,2\\n")\nwith open("rcsv-a.csv", "r", encoding="utf-8") as f:\n    row = next(csv.reader(f))\nprint(row[0] + row[1])\nprint(int(row[0]) + int(row[1]))',
-      choices: ["3\n3", "12\n3", "12\n12"],
+      intro: "csv.reader で読んだ値は、どれも文字列です。文字列に * 2 をすると何が起きるか、int と float で変えるとどうなるかを考えよう。",
+      code: 'import csv\n\nwith open("rcsv-a.csv", "w", encoding="utf-8") as f:\n    f.write("3,1.5\\n")\nf = open("rcsv-a.csv", "r", encoding="utf-8")\nrow = next(csv.reader(f))\nf.close()\nprint(row[0] * 2, int(row[0]) * 2, float(row[1]) + 1)',
+      choices: ["6 6 2.5", "33 6 2.5", "33 6 1.51"],
       answer: 1,
       explain:
-        "CSV リーダが返すリストの中身は、数に見えても文字列の '1' と '2' です。文字列どうしの + はつなげる計算なので、1行目は 12 になります。int() で整数に変えてから足すと、ふつうの足し算になって 3 です。CSV の値で計算するときは、必ず int() や float() で数にしましょう。",
+        "CSV リーダが返すリストの中身は、数に見えても文字列の '3' と '1.5' です。文字列に * 2 をすると、同じ文字列を2回つなげるので、row[0] * 2 は 33 です。int(row[0]) で整数の 3 にしてから * 2 をすると 6 になります。float(row[1]) は小数の 1.5 なので、1 を足すと 2.5 です。6 6 2.5 を選んだ人は、読んだ値がそのまま数だと考えています。1.51 は、文字列のまま \"1\" をつなげたときの形です。",
       xp: 15,
     },
     {
