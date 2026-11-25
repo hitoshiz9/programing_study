@@ -5,6 +5,7 @@ import { CHAPTERS, chapterUrl, LESSONS } from "../lib/lessons.ts";
 import { READ_LESSONS } from "../lib/reading.ts";
 import { ML_LESSONS } from "../lib/ml.ts";
 import { EXPLAIN } from "../lib/explain.ts";
+import { LEARN } from "../lib/learn/index.ts";
 
 const N = 25;
 const squash = (s: string) => s.replace(/\s+/g, "");
@@ -23,6 +24,7 @@ const ours: [string, string][] = [];
 for (const l of [...LESSONS, ...ML_LESSONS]) ours.push([l.id, l.intro.join("") + l.task + l.hints.join("")]);
 for (const l of READ_LESSONS) ours.push([l.id, l.intro + l.explain]);
 for (const [id, blocks] of Object.entries(EXPLAIN)) for (const b of blocks) if ("p" in b) ours.push([id, b.p]);
+for (const ch of LEARN) for (const sec of ch.sections) for (const b of sec.blocks) if ("p" in b) ours.push([`${ch.ref} ${sec.title}`, b.p]);
 
 let hits = 0;
 for (const [id, text] of ours) {

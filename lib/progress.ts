@@ -16,9 +16,7 @@ export const BADGES = [
   { id: "streak3", emoji: "🔥", name: "3日連続", desc: "3日連続で正解" },
   { id: "streak7", emoji: "🌟", name: "7日連続", desc: "7日連続で正解" },
   { id: "lv5", emoji: "🚀", name: "レベル5", desc: "レベル5に到達" },
-  { id: "read-clear", emoji: "📖", name: "読めるようになった", desc: "「読む」を全部クリア" },
-  { id: "write-clear", emoji: "✍️", name: "書けるようになった", desc: "「書く」を全部クリア" },
-  { id: "ml-clear", emoji: "🤖", name: "AIの入口に立った", desc: "「AI」を全部クリア" },
+  { id: "chapter-clear", emoji: "📘", name: "1章修了", desc: "1つの章の問題（演習問題も）をすべてクリア" },
 ] as const;
 
 export const levelOf = (xp: number) => Math.floor(Math.sqrt(xp / 25)) + 1;
@@ -68,7 +66,7 @@ export function complete(
   if (next.streak >= 7) earned.push("streak7");
   if (levelOf(next.xp) >= 5) earned.push("lv5");
   for (const [badge, ids] of clears) if (ids.every((id) => next.done.includes(id))) earned.push(badge);
-  const newBadges = earned.filter((b) => !p.badges.includes(b));
+  const newBadges = [...new Set(earned)].filter((b) => !p.badges.includes(b));
   next.badges = [...p.badges, ...newBadges];
   return { next, gainedXp: next.xp - p.xp, newBadges, leveledUp: levelOf(next.xp) > levelOf(p.xp) };
 }
