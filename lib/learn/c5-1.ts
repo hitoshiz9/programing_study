@@ -20,6 +20,7 @@ export const chapter: LearnChapter = {
         { try: "l51-import" },
         { h: "モジュール名を付けないと NameError" },
         { p: "import math で使えるようになる名前は math だけです。中の関数を sqrt(16) のように、math. を付けずに呼ぶと、「その名前を知らない」という NameError になります。モジュールの中の名前は、必ず math.sqrt のように「モジュール名.」を付けて呼びます（付けずに呼ぶ方法は、次の節で学びます）。" },
+        { p: "エラーで止まらずに続けたいときは、try: と except NameError: を使います。try: の下の字下げした行で NameError が起きると、そこで止まらずに except NameError: の下の行が実行されます。エラーが起きなければ、except の下の行は実行されません。" },
         { code: "import math\nprint(math.sqrt(36))\nprint(sqrt(36))", out: "6.0\nTraceback (most recent call last):\n  File \"<exec>\", line 3, in <module>\nNameError: name 'sqrt' is not defined" },
         { try: "r51-prefix" },
         { h: "いくつものモジュールを1行で" },

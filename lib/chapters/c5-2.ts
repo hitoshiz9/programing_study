@@ -15,12 +15,15 @@ const CALC_HEAD = `import importlib, os, sys\n\nos.makedirs("mods52", exist_ok=T
 
 const SHAPE_HEAD = `import importlib, sys\n\nsource = """def square(a):\n    return a * a\n\ndef rect(a, b):\n    return a * b\n"""\nwith open("shape52.py", "w", encoding="utf-8") as f:\n    f.write(source)\n${RESET("shape52")}\n`;
 
+const TAX = (body: string, tail: string) =>
+  `import importlib, sys\n\n# モジュールファイル tax52.py の中身\nsource = """${body}\n"""\nwith open("tax52.py", "w", encoding="utf-8") as f:\n    f.write(source)\n\n${RESET("tax52")}${tail}`;
+
 export const chapter: Chapter = {
   ref: "5-2",
   title: "モジュールの作り方",
   url: "https://utokyo-ipp.github.io/5/5-2.html",
   stage: "write",
-  order: ["l52-file", "l52-toplevel", "l52-path", "l52-from"],
+  order: ["l52-file", "l52-toplevel", "l52-path", "l52-from", "l52-tax"],
   lessons: [
     {
       id: "l52-file",
@@ -29,7 +32,7 @@ export const chapter: Chapter = {
         "Python のコードだけを書いた、名前が .py で終わるファイルをモジュールファイルといいます。greet52.py というファイルを作ると、import greet52 で読み込めます。モジュールの名前は、ファイル名から .py を取ったものです。",
         "このアプリでは、コードの中で open を使って .py ファイルを書き、そのあと import します。import の直前にある2行の準備は、作り直したファイルを毎回読み込み直すためのものです。",
       ],
-      example: 'import importlib, sys\n\nwith open("hi52.py", "w", encoding="utf-8") as f:\n    f.write("NAME = \\"ぴよ\\"\\n")\n\nimportlib.invalidate_caches()\nsys.modules.pop("hi52", None)\nimport hi52\nprint(hi52.NAME)',
+      example: "",
       task: "モジュールファイル greet52.py の中の関数 hello(name) を完成させよう。hello(\"ミケ\") が「こんにちは、ミケさん」を返すようにします（pass の行を書きかえます）。",
       starter: GREET("    pass"),
       solution: GREET('    return "こんにちは、" + name + "さん"'),
@@ -45,7 +48,7 @@ export const chapter: Chapter = {
       intro: [
         "モジュールを import すると、そのファイルのコードが上から順に、まとめて1回実行されます。関数の定義だけでなく、print などの命令も、そのときに動きます。",
       ],
-      example: 'import importlib, sys\n\nwith open("hey52.py", "w", encoding="utf-8") as f:\n    f.write("print(\\"hey52 を読み込みました\\")\\n")\n\nimportlib.invalidate_caches()\nsys.modules.pop("hey52", None)\nimport hey52',
+      example: "",
       task: "モジュールファイル count52.py の中に、1 から 3 までを1行ずつ表示する for 文を書こう。import count52 したときに 1, 2, 3 が表示され、そのあとに「読み込み完了」が表示されます。",
       starter: COUNT("# ここに、1 から 3 までを1行ずつ表示する for 文を書こう"),
       solution: COUNT("for i in range(1, 4):\n    print(i)"),
@@ -88,6 +91,20 @@ export const chapter: Chapter = {
       hints: ["from shape52 import rect のあとは、rect(3, 4) と名前だけで呼べます。", "import shape52 as sp のあとは、sp.square(3) と書きます。"],
       xp: 25,
     },
+    {
+      id: "l52-tax",
+      title: "演習: 税込みの値段のモジュール",
+      intro: [],
+      example: "",
+      task: "モジュールファイル tax52.py の中に、値段 price に 10% の税を足した値段（price * 11 // 10）を返す関数 with_tax(price) を書こう。そのあと from tax52 import with_tax で取りこみ、with_tax(300) と with_tax(980) を1行ずつ表示しよう。",
+      starter: TAX("# ここに関数 with_tax(price) を書こう", "# ここで with_tax を取りこんで、表示しよう\n"),
+      solution: TAX("def with_tax(price):\n    return price * 11 // 10", "from tax52 import with_tax\nprint(with_tax(300))\nprint(with_tax(980))"),
+      wrong: TAX("def with_tax(price):\n    return price * 1.1", "from tax52 import with_tax\nprint(with_tax(300))\nprint(with_tax(980))"),
+      expect: "330\n1078",
+      mustInclude: ["from tax52 import", "def with_tax"],
+      hints: ["source の中に def with_tax(price): と、その下に字下げした return price * 11 // 10 を書きます。", "最後に from tax52 import with_tax と、print(with_tax(300))、print(with_tax(980)) です。"],
+      xp: 30,
+    },
   ],
   reads: [
     {
@@ -112,44 +129,20 @@ export const chapter: Chapter = {
         "モジュールの名前は、ファイル名から拡張子の .py を取ったものです。だから tool52r.py を import したモジュールの __name__ は tool52r になります。import tool52r.py のように .py を付けて書くとエラーになるのも、名前に .py が入らないからです。__main__ は、ファイルをスクリプトとして直接実行したときの名前で、付録の「コマンドライン実行」で学びます。",
       xp: 15,
     },
+    {
+      id: "r52-missing",
+      title: "見つからないモジュール",
+      intro: "",
+      code: 'try:\n    import nothere52\n    print("読み込めた")\nexcept ModuleNotFoundError:\n    print("ない")\nprint("続き")',
+      choices: ["ない\n続き", "読み込めた\nない\n続き", "ない"],
+      answer: 0,
+      explain:
+        "nothere52.py というファイルはどこにもないので、import nothere52 の行で ModuleNotFoundError が起きます。すると try: の中の残り（print(\"読み込めた\")）は飛ばされ、except の下の「ない」が表示されます。そのあとはプログラムの続きに進むので、「続き」も表示されます。エラーで止まると考えた人は、try と except がエラーをつかまえて続けさせることを思い出しましょう。",
+      xp: 15,
+    },
   ],
-  explain: {
-    "l52-file": [
-      { h: "プログラムを分けて再利用する" },
-      { p: "プログラムが大きくなってくると、1つのファイルに全部書くより、役割ごとに別のファイルに分けたほうが、作るのも直すのも楽になります。一度作った便利な関数を別のプログラムでも使いたいときは、その関数を1つのファイルにまとめておき、使う側から import します。こうして切り出したファイルがモジュールです。" },
-      { p: "モジュールファイルは、Python のコードだけが書かれた、拡張子 .py のテキストファイルです。説明の文章や実行結果は入りません。文字コードは UTF-8 で保存するのが公式にすすめられています。" },
-      { h: "このアプリでの作り方" },
-      { p: "このアプリでは、エディタとは別にファイルを作る画面がないので、open と write で .py ファイルを書き出してから import します。三重の引用符 \"\"\" で囲んだ文字列は、何行にもわたって書けるので、モジュールの中身を書くのに便利です。" },
-      { code: 'import importlib, sys\n\nsource = """def twice(x):\n    return x * 2\n"""\nwith open("ex52a.py", "w", encoding="utf-8") as f:\n    f.write(source)\n\nimportlib.invalidate_caches()\nsys.modules.pop("ex52a", None)\nimport ex52a\nprint(ex52a.twice(5))', out: "10" },
-      { p: "import したモジュールの関数は、モジュール名.関数名 で呼びます。importlib.invalidate_caches() は、プログラムの途中で作ったファイルを import が確実に見つけられるようにする命令で、sys.modules.pop(...) は、前の実行で読み込んだ古い中身を忘れさせる命令です。" },
-    ],
-    "l52-toplevel": [
-      { h: "ファイル全体が1つのプログラム" },
-      { p: "Jupyter や Colab のノートブックは、セルを1つずつ選んで実行できました。ノートブックを .py ファイルとして保存すると、コードのセルだけが順番に並んだ1つのプログラムになり、説明の文章はコメントになります。そのファイルを実行したり import したりすると、セルごとではなく、上から下までが1回で全部実行されます。" },
-      { p: "import したときに表示がたくさん出ると、使う側は困ります。そのため、ふつうモジュールには関数や値の定義だけを書き、表示などの処理は使う側に書きます。直接実行したときだけ動かしたい処理の書き分け方は、付録の「コマンドライン実行」で学びます。" },
-      { code: 'import importlib, sys\n\nsource = """print("A")\ndef f():\n    print("B")\nprint("C")\n"""\nwith open("ex52b.py", "w", encoding="utf-8") as f:\n    f.write(source)\n\nimportlib.invalidate_caches()\nsys.modules.pop("ex52b", None)\nimport ex52b\nex52b.f()', out: "A\nC\nB" },
-      { p: "import した時点では、関数 f は定義されるだけで、中の print(\"B\") は動きません。B が表示されるのは、最後に ex52b.f() と呼び出したときです。" },
-    ],
-    "l52-path": [
-      { h: "ファイルを置く場所が大事" },
-      { p: "Colab のような実行環境で自分のモジュールを使うときは、まず .py ファイルを、プログラムが動いているディレクトリ（カレントディレクトリ）に置く必要があります。手元のパソコンからアップロードするのは、そのためです。このアプリでは、コードの中で open を使ってファイルを書くことが、アップロードのかわりになります。" },
-      { p: "import がモジュールを探す場所は sys.path に並んでいます。このアプリでは、最初の \"\" がカレントディレクトリを表します。そこにも、Python に付いてくるモジュールの置き場にもないファイルは見つからず、ModuleNotFoundError になります。" },
-      { code: 'try:\n    import no_such_module52\nexcept ModuleNotFoundError:\n    print("見つかりません")', out: "見つかりません" },
-      { p: "別のディレクトリに置いたモジュールを使うときは、sys.path.append() でそのディレクトリを探す場所に加えます。ただし、ふだんは使う側と同じディレクトリにモジュールを置くのがいちばん簡単です。" },
-    ],
-    "l52-from": [
-      { h: "既存のモジュールと同じ使い方" },
-      { p: "自分で作ったモジュールも、math のような Python に付いてくるモジュールと、まったく同じ方法で読み込めます。import モジュール名 で読み込めば、モジュール名.関数名 で呼べます。from モジュール名 import 関数名 なら関数名だけで、import モジュール名 as 別名 なら短い別名で呼べます。" },
-      { p: "from モジュール名 import * も書けますが、モジュールの中の名前と自分のプログラムの名前がぶつかって、知らないうちに上書きされることがあるので、すすめられていません。" },
-      { code: 'import importlib, sys\n\nsource = """def fact(n):\n    prod = 1\n    for i in range(1, n + 1):\n        prod *= i\n    return prod\n"""\nwith open("ex52c.py", "w", encoding="utf-8") as f:\n    f.write(source)\n\nimportlib.invalidate_caches()\nsys.modules.pop("ex52c", None)\nfrom ex52c import fact\nimport ex52c as e\nprint(fact(5), e.fact(3))', out: "120 6" },
-    ],
-  },
-  topics: [
-    ["モジュールファイル", ["l52-file"]],
-    ["ノートブックファイルをモジュールファイルに変換する", ["l52-toplevel", "r52-once"]],
-    ["モジュールファイルをアップロードする", ["l52-path"]],
-    ["自作モジュールの使い方", ["l52-from", "r52-name"]],
-  ],
+  explain: {},
+  topics: [],
   refSections: 4,
   refProse: 1459,
 };
