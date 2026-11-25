@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useId, useState, useSyncExternalStore } from "react";
 import { chapterLabel, chapterUrl, LESSONS, type Lesson } from "@/lib/lessons";
 import { READ_LESSONS, type ReadLesson } from "@/lib/reading";
 import { ML_LESSONS } from "@/lib/ml";
@@ -9,16 +9,22 @@ import { judge, type RunResult } from "@/lib/judge";
 import { BADGES, complete, dayString, EMPTY, levelBar, parse } from "@/lib/progress";
 import { getRaw, save, subscribe } from "@/lib/store";
 import { preload, runPython } from "@/lib/runner";
+import { LEARN } from "@/lib/learn";
+import type { Section } from "@/lib/learn/types";
 
-// ステージは「読む → 書く → AI」の順。どれも最初から開いている。
-const STAGES = [
-  { id: "read", label: "📖 読む", lessons: READ_LESSONS as { id: string; title: string; ref: string }[] },
-  { id: "write", label: "✍️ 書く", lessons: LESSONS as { id: string; title: string; ref: string }[] },
-  { id: "ml", label: "🤖 AI", lessons: ML_LESSONS as { id: string; title: string; ref: string }[] },
-] as const;
-type StageId = (typeof STAGES)[number]["id"];
-const TOTAL = STAGES.reduce((n, s) => n + s.lessons.length, 0);
-const CLEARS: [string, string[]][] = STAGES.map((s) => [`${s.id}-clear`, s.lessons.map((l) => l.id)]);
+// 教科書の節。「知る(説明) → すぐにやってみる → 演習問題」の順に進む。
+// 各章は、節(説明と問題が1対)のあとに、独立した「演習問題」のページを置く
+type SectionMeta = { id: string; title: string; ref: string; ids: string[]; section?: Section; exercises?: string[] };
+const SECTIONS: SectionMeta[] = LEARN.flatMap((ch) => [
+  ...ch.sections.map((s, i) => ({ id: `s-${ch.ref}-${i}`, title: s.title, ref: ch.ref, section: s, ids: s.blocks.flatMap((b) => ("try" in b ? [b.try] : [])) })),
+  ...(ch.guide ? [] : [{ id: `x-${ch.ref}`, title: "演習問題", ref: ch.ref, exercises: ch.exercises, ids: ch.exercises }]),
+]);
+
+// 数えるのは教科書に入っている問題。章の問題をすべて解くとバッジ
+const TOTAL = new Set(SECTIONS.flatMap((m) => m.ids)).size;
+const CLEARS: [string, string[]][] = LEARN.map((ch) => ["chapter-clear", SECTIONS.filter((m) => m.ref === ch.ref).flatMap((m) => m.ids)]);
+const ALL_READ = new Map(READ_LESSONS.map((l) => [l.id, l]));
+const ALL_WRITE = new Map([...LESSONS, ...ML_LESSONS].map((l) => [l.id, l]));
 
 type Toast = { id: number; text: string };
 let toastSeq = 0;
@@ -27,21 +33,16 @@ export default function App() {
   const raw = useSyncExternalStore(subscribe, getRaw, () => null);
   const progress = raw === null ? EMPTY : parse(raw);
   const isDone = (id: string) => progress.done.includes(id);
+  // 節は、やってみる・演習問題をすべて解いたら「済み」
+  const sectionDone = (m: SectionMeta) => m.ids.every(isDone);
 
-  // 選んでいないときは、最初の「まだ正解していない」レッスンを開く
-  const [sel, setSel] = useState<{ stage: StageId; i: number } | null>(null);
-  const auto = (() => {
-    for (const s of STAGES) {
-      const i = s.lessons.findIndex((l) => !isDone(l.id));
-      if (i >= 0) return { stage: s.id, i };
-    }
-    return { stage: STAGES[0].id, i: 0 };
-  })();
+  // 選んでいないときは、最初の「まだ終わっていない」節を開く
+  const [sel, setSel] = useState<number | null>(null);
+  // はじめての人は、アプリの使い方(問題のない章)から
+  const auto = progress.done.length === 0 ? 0 : Math.max(0, SECTIONS.findIndex((m) => !sectionDone(m)));
   const cur = sel ?? auto;
-  const stage = STAGES.find((s) => s.id === cur.stage)!;
-  const lessonMeta = stage.lessons[cur.i];
-  const hasNext = cur.i < stage.lessons.length - 1;
-  const goNext = () => setSel({ stage: cur.stage, i: cur.i + 1 });
+  const meta = SECTIONS[cur];
+  const goNext = () => setSel(cur + 1);
 
   const [codes, setCodes] = useState<Record<string, string>>({});
   const [party, setParty] = useState(0);
@@ -81,7 +82,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-amber-50 text-stone-800">
       <header className="sticky top-0 z-10 flex flex-wrap items-center gap-4 border-b border-amber-200 bg-white/90 px-4 py-3 backdrop-blur">
-        <h1 className="text-lg font-bold">🐤 ぴよぴよ Python</h1>
+        <h1 className="text-lg font-bold">Python学習</h1>
         <div className="flex min-w-48 flex-1 items-center gap-2">
           <span className="rounded-full bg-amber-400 px-3 py-1 text-sm font-bold text-white">Lv {bar.level}</span>
           <div
@@ -114,45 +115,17 @@ export default function App() {
 
       <div className="mx-auto grid max-w-6xl gap-4 p-4 md:grid-cols-[260px_1fr]">
         <nav aria-label="レッスン一覧" className="md:sticky md:top-20 md:max-h-[calc(100vh-6rem)] md:overflow-y-auto">
-          <div role="tablist" aria-label="ステージ" className="mb-2 grid grid-cols-3 gap-1 rounded-xl bg-amber-100 p-1">
-            {STAGES.map((s) => {
-              const done = s.lessons.filter((l) => isDone(l.id)).length;
-              return (
-                <button
-                  key={s.id}
-                  role="tab"
-                  aria-selected={s.id === cur.stage}
-                  onClick={() => {
-                    const i = s.lessons.findIndex((l) => !isDone(l.id));
-                    setSel({ stage: s.id, i: i < 0 ? 0 : i });
-                  }}
-                  className={`rounded-lg px-2 py-2 text-sm ${s.id === cur.stage ? "bg-white font-bold shadow-sm" : "hover:bg-amber-50"}`}
-                >
-                  {s.label}
-                  <span className="block text-xs text-stone-500">
-                    {done}/{s.lessons.length}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-          <p className="mb-2 px-1 text-xs text-stone-500">おすすめの順番：📖 読む → ✍️ 書く → 🤖 AI</p>
+          <p className="mb-2 px-1 text-xs text-stone-500">目次。各節は「説明を読む → すぐ下の問題で試す」のくり返しです。章の最後に 📝 演習問題 があります。</p>
           <ol className="space-y-1">
-            {stage.lessons.map((l, n) => (
-              <li key={l.id}>
-                {cur.stage !== "read" && l.ref !== stage.lessons[n - 1]?.ref && (
-                  <p className="mt-3 mb-1 px-1 text-xs font-bold text-stone-500">
-                    {chapterLabel(l.ref)}
-                  </p>
-                )}
+            {SECTIONS.map((m, n) => (
+              <li key={m.id}>
+                {m.ref !== SECTIONS[n - 1]?.ref && <p className="mt-3 mb-1 px-1 text-xs font-bold text-stone-500">{chapterLabel(m.ref)}</p>}
                 <button
-                  onClick={() => setSel({ stage: cur.stage, i: n })}
-                  aria-current={n === cur.i ? "page" : undefined}
-                  className={`w-full rounded-lg px-3 py-2 text-left text-sm ${
-                    n === cur.i ? "bg-amber-400 font-bold text-white" : "hover:bg-amber-100"
-                  }`}
+                  onClick={() => setSel(n)}
+                  aria-current={n === cur ? "page" : undefined}
+                  className={`w-full rounded-lg px-3 py-2 text-left text-sm ${n === cur ? "bg-amber-400 font-bold text-white" : "hover:bg-amber-100"}`}
                 >
-                  {isDone(l.id) ? "✅" : "⬜"} {n + 1}. {l.title}
+                  {m.ids.length === 0 ? "📘" : sectionDone(m) ? "✅" : "⬜"} {m.exercises ? "📝 演習問題" : `${n + 1 - SECTIONS.findIndex((x) => x.ref === m.ref)}. ${m.title}`}
                 </button>
               </li>
             ))}
@@ -176,28 +149,15 @@ export default function App() {
         </nav>
 
         <main className="space-y-4">
-          {cur.stage === "read" ? (
-            <ReadView
-              key={lessonMeta.id}
-              lesson={lessonMeta as ReadLesson}
-              n={cur.i + 1}
-              done={isDone(lessonMeta.id)}
-              onCorrect={onCorrect}
-              onNext={hasNext ? goNext : undefined}
-            />
-          ) : (
-            <WriteView
-              key={lessonMeta.id}
-              lesson={lessonMeta as Lesson}
-              label={cur.stage === "ml" ? "AI" : "書く"}
-              n={cur.i + 1}
-              done={isDone(lessonMeta.id)}
-              code={codes[lessonMeta.id] ?? (lessonMeta as Lesson).starter}
-              setCode={(v) => setCodes((c) => ({ ...c, [lessonMeta.id]: v }))}
-              onCorrect={onCorrect}
-              onNext={hasNext ? goNext : undefined}
-            />
-          )}
+          <SectionView
+            key={meta.id}
+            meta={meta}
+            isDone={isDone}
+            codes={codes}
+            setCodes={setCodes}
+            onCorrect={onCorrect}
+            onNext={cur < SECTIONS.length - 1 ? goNext : undefined}
+          />
         </main>
       </div>
 
@@ -213,7 +173,35 @@ export default function App() {
   );
 }
 
-type ViewProps = { n: number; done: boolean; onCorrect: (id: string, xp: number) => void; onNext?: () => void };
+// inLesson: 教科書の節の中に出すとき。説明は節に書いてあるので、問題の部分だけを出す
+type ViewProps = {
+  n: number;
+  done: boolean;
+  onCorrect: (id: string, xp: number) => void;
+  onNext?: () => void;
+  inLesson?: string; // 節の中での呼び名(「やってみよう」「演習問題 1」など)
+};
+
+// コードの欄のキー操作: Ctrl + Enter で実行、Tab で字下げ(スペース4つ。Python は字下げが大事なので)
+function editorKeys(e: React.KeyboardEvent<HTMLTextAreaElement>, code: string, setCode: (v: string) => void, run: () => void) {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+    e.preventDefault();
+    run();
+  } else if (e.key === "Tab" && !e.shiftKey) {
+    e.preventDefault();
+    const t = e.currentTarget;
+    // ブラウザの「入力」として入れると、Ctrl + Z で取り消せる(入らないブラウザでは直接書きかえる)
+    if (!document.execCommand("insertText", false, "    ")) {
+      const s = t.selectionStart;
+      setCode(code.slice(0, s) + "    " + code.slice(t.selectionEnd));
+      requestAnimationFrame(() => t.setSelectionRange(s + 4, s + 4));
+    }
+  }
+}
+
+// 実行結果の文: エラーより前に表示されたものも、エラーと一緒に出す
+const resultText = (r: RunResult) =>
+  r.timedOut ? TIMEOUT_MSG : [r.out.trimEnd(), r.error].filter(Boolean).join("\n") || (r.images?.length ? "(グラフ)" : "(何も表示されていません)");
 
 function ChapterLink({ refId }: { refId: string }) {
   return (
@@ -223,7 +211,9 @@ function ChapterLink({ refId }: { refId: string }) {
       rel="noopener noreferrer"
       className="mt-3 inline-block text-sm text-sky-700 underline hover:text-sky-900"
     >
-      📘 もっと詳しく：東大教材「{chapterLabel(refId)}」を読む（別タブで開きます）
+      {refId === "1-0"
+        ? "📘 参考：東大教材の最初の章（教材では Google Colaboratory を使います。このアプリでは使いません。別タブで開きます）"
+        : `📘 もっと詳しく：東大教材「${chapterLabel(refId)}」を読む（別タブで開きます）`}
     </a>
   );
 }
@@ -287,7 +277,12 @@ function Figures({ images }: { images?: string[] }) {
     <div className="mt-2 space-y-2">
       {images.map((src, i) => (
         // eslint-disable-next-line @next/next/no-img-element -- 実行のたびに作られる画像なので next/image は使わない
-        <img key={i} src={`data:image/png;base64,${src}`} alt={`グラフ ${i + 1}`} className="max-w-full rounded-lg border border-stone-200 bg-white" />
+        <img
+          key={i}
+          src={`data:image/png;base64,${src}`}
+          alt={`グラフ ${i + 1}`}
+          className="max-w-full rounded-lg border border-stone-200 bg-white"
+        />
       ))}
     </div>
   );
@@ -303,7 +298,8 @@ function NextButton({ onNext }: { onNext?: () => void }) {
 }
 
 // ---- 読む: 結果を3択で予想し、実行して確かめる ----
-function ReadView({ lesson, n, done, onCorrect, onNext }: ViewProps & { lesson: ReadLesson }) {
+function ReadView({ lesson, n, done, onCorrect, onNext, inLesson }: ViewProps & { lesson: ReadLesson }) {
+  const qid = useId();
   const [picked, setPicked] = useState<number | null>(null);
   const [run, setRun] = useState<RunResult | null>(null);
   const [running, setRunning] = useState(false);
@@ -325,19 +321,19 @@ function ReadView({ lesson, n, done, onCorrect, onNext }: ViewProps & { lesson: 
     <>
       <section className="rounded-2xl bg-white p-5 shadow-sm">
         <p className="text-sm text-stone-500">
-          読む {n} ・ {lesson.xp} XP {done && "・ クリア済み"}
+          {inLesson ?? `読む ${n}`} ・ {lesson.xp} XP {done && "・ クリア済み"}
         </p>
-        <h2 className="mb-3 text-2xl font-bold">{lesson.title}</h2>
-        <p className="mb-3 leading-relaxed">{lesson.intro}</p>
+        <h2 className={`mb-3 font-bold ${inLesson ? "text-xl" : "text-2xl"}`}>{lesson.title}</h2>
+        {!inLesson && <p className="mb-3 leading-relaxed">{lesson.intro}</p>}
         <pre className="overflow-x-auto rounded-lg bg-stone-800 p-3 font-mono text-sm text-amber-100">{lesson.code}</pre>
-        <ChapterLink refId={lesson.ref} />
+        {!inLesson && <ChapterLink refId={lesson.ref} />}
       </section>
 
       <section className="rounded-2xl bg-white p-5 shadow-sm">
-        <h3 id="q" className="mb-3 font-bold">
+        <h3 id={qid} className="mb-3 font-bold">
           🤔 このコードを実行すると、何が表示される？
         </h3>
-        <div role="radiogroup" aria-labelledby="q" className="grid gap-2 sm:grid-cols-3">
+        <div role="radiogroup" aria-labelledby={qid} className="grid gap-2 sm:grid-cols-3">
           {lesson.choices.map((c, i) => {
             const state = picked === i ? (i === lesson.answer ? "ok" : "ng") : ok && i === lesson.answer ? "ok" : "";
             return (
@@ -347,7 +343,11 @@ function ReadView({ lesson, n, done, onCorrect, onNext }: ViewProps & { lesson: 
                 aria-checked={picked === i}
                 onClick={() => pick(i)}
                 className={`rounded-xl border-2 p-3 text-left ${
-                  state === "ok" ? "border-green-500 bg-green-50" : state === "ng" ? "border-orange-400 bg-orange-50" : "border-stone-200 hover:border-amber-400"
+                  state === "ok"
+                    ? "border-green-500 bg-green-50"
+                    : state === "ng"
+                      ? "border-orange-400 bg-orange-50"
+                      : "border-stone-200 hover:border-amber-400"
                 }`}
               >
                 <span className="mb-1 block text-xs text-stone-500">{["ア", "イ", "ウ"][i]}</span>
@@ -378,7 +378,7 @@ function ReadView({ lesson, n, done, onCorrect, onNext }: ViewProps & { lesson: 
         </div>
         {run && (
           <pre className="mt-3 overflow-x-auto whitespace-pre-wrap rounded-lg bg-stone-800 p-3 font-mono text-sm text-green-200">
-            {run.timedOut ? TIMEOUT_MSG : run.error ?? (run.out || "(何も表示されていません)")}
+            {resultText(run)}
           </pre>
         )}
         {ok && <NextButton onNext={onNext} />}
@@ -397,9 +397,20 @@ function WriteView({
   onCorrect,
   onNext,
   label,
-}: ViewProps & { lesson: Lesson; label: string; code: string; setCode: (v: string) => void }) {
+  inLesson,
+}: ViewProps & {
+  lesson: Lesson;
+  label: string;
+  code: string;
+  setCode: (v: string) => void;
+}) {
+  const uid = useId();
   const [running, setRunning] = useState(false);
-  const [result, setResult] = useState<{ r: RunResult; ok: boolean; message: string } | null>(null);
+  const [result, setResult] = useState<{
+    r: RunResult;
+    ok: boolean;
+    message: string;
+  } | null>(null);
   const [hintCount, setHintCount] = useState(0);
 
   async function run() {
@@ -412,55 +423,51 @@ function WriteView({
     if (j.ok) onCorrect(lesson.id, lesson.xp);
   }
 
-  // Tab で字下げ(スペース4つ)。Python は字下げが大事なので。
-  function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-      e.preventDefault();
-      run();
-    } else if (e.key === "Tab" && !e.shiftKey) {
-      e.preventDefault();
-      const t = e.currentTarget;
-      // ブラウザの「入力」として入れると、Ctrl + Z で取り消せる(入らないブラウザでは直接書きかえる)
-      if (!document.execCommand("insertText", false, "    ")) {
-        const s = t.selectionStart;
-        setCode(code.slice(0, s) + "    " + code.slice(t.selectionEnd));
-        requestAnimationFrame(() => t.setSelectionRange(s + 4, s + 4));
-      }
-    }
-  }
+  const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => editorKeys(e, code, setCode, run);
 
   return (
     <>
-      <section className="rounded-2xl bg-white p-5 shadow-sm">
-        <p className="text-sm text-stone-500">
-          {label} {n} ・ {lesson.xp} XP {done && "・ クリア済み"}
-        </p>
-        <h2 className="mb-3 text-2xl font-bold">{lesson.title}</h2>
-        {lesson.intro.map((p, i) => (
-          <p key={i} className="mb-2 leading-relaxed">
-            {p}
+      {!inLesson && (
+        <section className="rounded-2xl bg-white p-5 shadow-sm">
+          <p className="text-sm text-stone-500">
+            {label} {n} ・ {lesson.xp} XP {done && "・ クリア済み"}
           </p>
-        ))}
-        <p className="mt-3 text-sm font-semibold">お手本</p>
-        <pre className="mt-1 overflow-x-auto rounded-lg bg-stone-800 p-3 font-mono text-sm text-amber-100">{lesson.example}</pre>
-        {EXPLAIN[lesson.id] && (
-          <>
-            <a href="#practice" className="mt-3 inline-block text-sm text-sky-700 underline hover:text-sky-900">
-              ✏️ 説明を飛ばして練習へ ↓
-            </a>
-            <Explain blocks={EXPLAIN[lesson.id]} />
-          </>
-        )}
-        <ChapterLink refId={lesson.ref} />
-      </section>
+          <h2 className={`mb-3 font-bold ${inLesson ? "text-xl" : "text-2xl"}`}>{lesson.title}</h2>
+          {!inLesson && (
+            <>
+              {lesson.intro.map((p, i) => (
+                <p key={i} className="mb-2 leading-relaxed">
+                  {p}
+                </p>
+              ))}
+              <p className="mt-3 text-sm font-semibold">お手本</p>
+              <pre className="mt-1 overflow-x-auto rounded-lg bg-stone-800 p-3 font-mono text-sm text-amber-100">{lesson.example}</pre>
+              {EXPLAIN[lesson.id] && (
+                <>
+                  <a href={`#${uid}-practice`} className="mt-3 inline-block text-sm text-sky-700 underline hover:text-sky-900">
+                    ✏️ 説明を飛ばして練習へ ↓
+                  </a>
+                  <Explain blocks={EXPLAIN[lesson.id]} />
+                </>
+              )}
+              <ChapterLink refId={lesson.ref} />
+            </>
+          )}
+        </section>
+      )}
 
-      <section id="practice" className="scroll-mt-20 rounded-2xl bg-white p-5 shadow-sm">
+      <section id={`${uid}-practice`} className="scroll-mt-20 rounded-2xl bg-white p-5 shadow-sm">
+        {inLesson && (
+          <p className="text-sm text-stone-500">
+            {inLesson} ・ {lesson.title} ・ {lesson.xp} XP {done && "・ クリア済み"}
+          </p>
+        )}
         <h3 className="mb-2 font-bold">✏️ 練習：{lesson.task}</h3>
-        <label htmlFor="code" className="sr-only">
+        <label htmlFor={`${uid}-code`} className="sr-only">
           コードを書く欄
         </label>
         <textarea
-          id="code"
+          id={`${uid}-code`}
           value={code}
           onChange={(e) => setCode(e.target.value)}
           onKeyDown={onKeyDown}
@@ -501,7 +508,9 @@ function WriteView({
 
       {result && (
         <section aria-live="polite" className="rounded-2xl bg-white p-5 shadow-sm">
-          <p className={`mb-3 whitespace-pre-wrap rounded-lg p-3 font-bold ${result.ok ? "bg-green-100 text-green-800" : "bg-orange-100 text-orange-900"}`}>
+          <p
+            className={`mb-3 whitespace-pre-wrap rounded-lg p-3 font-bold ${result.ok ? "bg-green-100 text-green-800" : "bg-orange-100 text-orange-900"}`}
+          >
             {result.ok ? "🎉 正解！ よくできました！" : result.message}
           </p>
           <p className="text-sm font-semibold">実行結果</p>
@@ -516,6 +525,146 @@ function WriteView({
         </section>
       )}
     </>
+  );
+}
+
+// ---- 学ぶ: 節の説明を読み、そのあと確認問題を解く ----
+function SectionView({
+  meta,
+  isDone,
+  codes,
+  setCodes,
+  onCorrect,
+  onNext,
+}: {
+  meta: SectionMeta;
+  isDone: (id: string) => boolean;
+  codes: Record<string, string>;
+  setCodes: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  onCorrect: (id: string, xp: number) => void;
+  onNext?: () => void;
+}) {
+  const allDone = meta.ids.every(isDone);
+  const problem = (id: string, label: string) => {
+    const r = ALL_READ.get(id);
+    if (r) return <ReadView key={id} lesson={r} n={0} done={isDone(id)} onCorrect={onCorrect} inLesson={label} />;
+    const w = ALL_WRITE.get(id)!;
+    return (
+      <WriteView
+        key={id}
+        lesson={w}
+        label="書く"
+        n={0}
+        done={isDone(id)}
+        code={codes[id] ?? w.starter}
+        setCode={(v) => setCodes((c) => ({ ...c, [id]: v }))}
+        onCorrect={onCorrect}
+        inLesson={label}
+      />
+    );
+  };
+  // 説明のまとまりと、その直後の問題を1対にする
+  const pairs: { blocks: Block[]; problem?: string }[] = [{ blocks: [] }];
+  for (const b of meta.section?.blocks ?? []) {
+    if ("try" in b) {
+      pairs.at(-1)!.problem = b.try;
+      pairs.push({ blocks: [] });
+    } else pairs.at(-1)!.blocks.push(b);
+  }
+  return (
+    <>
+      <header className="px-1">
+        <p className="text-sm text-stone-500">📘 {chapterLabel(meta.ref)}</p>
+        <h2 className="text-2xl font-bold">{meta.exercises ? "📝 演習問題（この章で習ったことを組み合わせて解こう）" : meta.title}</h2>
+      </header>
+      {pairs
+        .filter((p) => p.blocks.length || p.problem)
+        .map((p, k) => (
+          <div key={k} className="space-y-2 rounded-3xl border-2 border-amber-200 p-2">
+            {p.blocks.length > 0 && (
+              <section className="rounded-2xl bg-white p-5 shadow-sm">
+                {p.blocks.map((b, i) =>
+                  "h" in b ? (
+                    <h3 key={i} className="mt-2 mb-2 text-lg font-bold text-amber-800">
+                      📖 {b.h}
+                    </h3>
+                  ) : "p" in b ? (
+                    <p key={i} className="mb-2 leading-relaxed">
+                      {b.p}
+                    </p>
+                  ) : (
+                    <LearnExample key={i} code={b.code} out={b.out} />
+                  ),
+                )}
+              </section>
+            )}
+            {p.problem && problem(p.problem, "✋ やってみよう（すぐ上の説明を試す問題）")}
+          </div>
+        ))}
+      {meta.exercises?.map((id, n) => problem(id, `📝 演習問題 ${n + 1}`))}
+      <ChapterLink refId={meta.ref} />
+      {onNext && (
+        <div>
+          <button
+            onClick={() => {
+              onNext();
+              document.querySelector("main")?.scrollIntoView();
+            }}
+            className={`rounded-full px-5 py-2 font-bold ${allDone ? "bg-green-600 text-white hover:bg-green-700" : "border border-stone-300 text-stone-600 hover:bg-stone-100"}`}
+          >
+            {allDone ? "次へ進む →" : "とばして次へ →"}
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
+// 教科書の例: 結果をはじめから見せる。書きかえて実行すれば、自分で試せる。
+function LearnExample({ code: first, out }: { code: string; out: string }) {
+  const [code, setCode] = useState(first);
+  const [run, setRun] = useState<RunResult | null>(null);
+  const [running, setRunning] = useState(false);
+  const shown = run ? resultText(run) : out;
+  const exec = async () => {
+    setRunning(true);
+    setRun(await runPython(code));
+    setRunning(false);
+  };
+  return (
+    <div className="mb-3">
+      <textarea
+        aria-label="例のコード（書きかえて実行できます）"
+        value={code}
+        onChange={(e) => setCode(e.target.value)}
+        onKeyDown={(e) => editorKeys(e, code, setCode, exec)}
+        spellCheck={false}
+        rows={code.split("\n").length}
+        className="w-full rounded-lg bg-stone-800 p-3 font-mono text-sm text-amber-100 focus:outline-2 focus:outline-amber-400"
+      />
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          onClick={exec}
+          disabled={running}
+          className="rounded-full border border-amber-400 px-3 py-1 text-sm hover:bg-amber-50 disabled:opacity-50"
+        >
+          {running ? "実行中…" : "▶ 実行"}
+        </button>
+        {code !== first && (
+          <button onClick={() => (setCode(first), setRun(null))} className="rounded-full px-3 py-1 text-sm text-stone-600 hover:bg-stone-100">
+            元に戻す
+          </button>
+        )}
+        <span className="text-xs text-stone-500">数字などを書きかえて、実行して試せます</span>
+      </div>
+      <p className="mt-1 text-xs font-semibold text-stone-500">結果</p>
+      <pre
+        className={`overflow-x-auto whitespace-pre-wrap rounded-lg p-3 font-mono text-sm ${run?.error ? "bg-red-50 text-red-800" : "bg-stone-700 text-green-200"}`}
+      >
+        {shown}
+      </pre>
+      {run && <Figures images={run.images} />}
+    </div>
   );
 }
 
