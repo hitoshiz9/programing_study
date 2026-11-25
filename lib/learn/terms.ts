@@ -27,6 +27,9 @@ export function termsOf(code: string): string[] {
   // 問題の中で、文字列としてファイルに書いて作るモジュール(greet.py)と、その中の関数・クラスも自分で作った名前
   for (const m of code.matchAll(/\b(\w+)\.py\b/g)) own.add(m[1]);
   for (const m of code.matchAll(/\b(?:def|class)\s+(\w+)/g)) own.add(m[1]);
+  // 文字列として書き出すファイルの中で作る変数(X = 5 など)も自分で作った名前
+  for (const s of code.matchAll(/("""|''')[\s\S]*?\1|(["'])(?:\\.|(?!\2)[^\n])*\2/g))
+    for (const m of s[0].matchAll(/(?:^|\\n|\n|["'])\s*([A-Za-z_]\w*)\s*=(?!=)/g)) own.add(m[1]);
 
   for (const m of c.matchAll(/\b[A-Za-z_]\w*\b/g)) {
     const w = m[0];

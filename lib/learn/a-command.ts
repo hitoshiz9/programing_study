@@ -28,7 +28,7 @@ export const chapter: LearnChapter = {
         { h: "データファイルは、今いるディレクトリから探される" },
         { p: "スクリプトの中で open(\"data.txt\") のようにファイル名だけで開くと、そのファイルは、スクリプトのある場所ではなく、今いるディレクトリから探されます。だから、データファイルを名前だけで開くスクリプトは、データファイルのあるディレクトリに cd してから実行しないと、ファイルが見つかりません。" },
         { p: "ファイルがあるかどうかは、os.path.exists(ファイル名) で調べられます。あれば True、なければ False です。" },
-        { code: 'import os\nos.chdir("/home/pyodide")\nos.makedirs("ex_cmd_box", exist_ok=True)\nwith open("ex_cmd_box/memo.txt", "w", encoding="utf-8") as f:\n    f.write("メモ")\nprint(os.path.exists("ex_cmd_box/memo.txt"))\nprint(os.path.exists("memo.txt"))', out: "True\nFalse" },
+        { code: 'import os\nos.chdir("/home/pyodide")\nos.makedirs("ex_cmd_box", exist_ok=True)\nwith open("ex_cmd_box/note_cmd.txt", "w", encoding="utf-8") as f:\n    f.write("メモ")\nprint(os.path.exists("ex_cmd_box/note_cmd.txt"))\nprint(os.path.exists("note_cmd.txt"))', out: "True\nFalse" },
         { try: "rcmd-cd" },
       ],
     },
