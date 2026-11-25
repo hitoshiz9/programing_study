@@ -6,8 +6,37 @@ export const chapter: Chapter = {
   title: "ディレクトリと木構造",
   url: "https://utokyo-ipp.github.io/4/4-3.html",
   stage: "write",
-  order: ["l43-makedirs", "l43-cwd", "l43-path", "l43-tree", "l43-lookup", "l43-ex-count"],
+  order: ["l43-diagram", "l43-cwd", "l43-path", "l43-mkdir", "l43-makedirs", "l43-tree", "l43-lookup", "l43-ex-count"],
   lessons: [
+    {
+      id: "l43-diagram",
+      title: "階層の図を組み立てる",
+      intro: [],
+      example: "",
+      task: "school の中に、art というディレクトリと memo.txt というファイルがあり、art の中に draw.txt があります（school の中では art が先、memo.txt があと）。4行の print の順番だけを並べかえて、この階層を表す図にしよう。",
+      starter: 'print("└── memo.txt")\nprint("school")\nprint("│   └── draw.txt")\nprint("├── art")\n',
+      solution: 'print("school")\nprint("├── art")\nprint("│   └── draw.txt")\nprint("└── memo.txt")',
+      wrong: 'print("school")\nprint("├── art")\nprint("└── memo.txt")\nprint("│   └── draw.txt")',
+      expect: "school\n├── art\n│   └── draw.txt\n└── memo.txt",
+      hints: ["いちばん外側の school が1行目です。", "art の中身の draw.txt は、art のすぐ下の行に来ます。memo.txt は school の中の最後なので、最後の行です。"],
+      xp: 15,
+    },
+    {
+      id: "l43-mkdir",
+      title: "途中のディレクトリもまとめて作る",
+      intro: [],
+      example: "",
+      task: "os.makedirs を1回だけ使って、mk43 の中の a の中に b というディレクトリを作ろう（exist_ok=True を付けます）。そのあと、os.path.exists で \"mk43/a/b\" と \"mk43/a\" があるかを、この順に表示しよう。",
+      starter: 'import os, shutil\nos.chdir("/home/pyodide")\nshutil.rmtree("mk43", ignore_errors=True)  # 前の実行で作ったものを消して、毎回作り直す\n\n# ここに書こう\n',
+      solution:
+        'import os, shutil\nos.chdir("/home/pyodide")\nshutil.rmtree("mk43", ignore_errors=True)  # 前の実行で作ったものを消して、毎回作り直す\n\nos.makedirs("mk43/a/b", exist_ok=True)\nprint(os.path.exists("mk43/a/b"))\nprint(os.path.exists("mk43/a"))',
+      wrong:
+        'import os, shutil\nos.chdir("/home/pyodide")\nshutil.rmtree("mk43", ignore_errors=True)  # 前の実行で作ったものを消して、毎回作り直す\n\nos.makedirs("mk43/a", exist_ok=True)\nprint(os.path.exists("mk43/a/b"))\nprint(os.path.exists("mk43/a"))',
+      expect: "True\nTrue",
+      mustInclude: ["makedirs"],
+      hints: ["作りたいいちばん奥までのパス \"mk43/a/b\" を os.makedirs に渡すと、途中の mk43 と a も作られます。", 'os.makedirs("mk43/a/b", exist_ok=True) のあとに、print(os.path.exists("mk43/a/b")) と print(os.path.exists("mk43/a")) です。'],
+      xp: 20,
+    },
     {
       id: "l43-makedirs",
       title: "ディレクトリを作って中を見る",
@@ -39,16 +68,16 @@ export const chapter: Chapter = {
         "os.chdir(行き先) で、カレントディレクトリを移動できます。\"..\" は「1つ上のディレクトリ」を表します。",
       ],
       example: 'import os\nos.chdir("/home/pyodide")\nprint(os.getcwd())',
-      task: "今のカレントディレクトリを表示したあと、os.chdir で work43 に移動して表示し、os.chdir(\"..\") で元に戻ってもう一度表示しよう（全部で3行）。",
+      task: "今のカレントディレクトリを表示したあと、os.chdir で work43 の中の inner に移動して表示し、.. を使って2段上の元の場所に戻ってもう一度表示しよう（全部で3行）。",
       starter:
-        'import os\nos.chdir("/home/pyodide")  # このアプリの最初の作業場所に戻しておく\nos.makedirs("work43", exist_ok=True)\n\n# ここに書こう\n',
+        'import os\nos.chdir("/home/pyodide")  # 最初の場所 /home/pyodide に戻しておく\nos.makedirs("work43/inner", exist_ok=True)\n\n# ここに書こう\n',
       solution:
-        'import os\nos.chdir("/home/pyodide")  # このアプリの最初の作業場所に戻しておく\nos.makedirs("work43", exist_ok=True)\n\nprint(os.getcwd())\nos.chdir("work43")\nprint(os.getcwd())\nos.chdir("..")\nprint(os.getcwd())',
+        'import os\nos.chdir("/home/pyodide")  # 最初の場所 /home/pyodide に戻しておく\nos.makedirs("work43/inner", exist_ok=True)\n\nprint(os.getcwd())\nos.chdir("work43/inner")\nprint(os.getcwd())\nos.chdir("../..")\nprint(os.getcwd())',
       wrong:
-        'import os\nos.chdir("/home/pyodide")  # このアプリの最初の作業場所に戻しておく\nos.makedirs("work43", exist_ok=True)\n\nprint(os.getcwd())\nos.chdir("work43")\nprint(os.getcwd())\nos.chdir("/home/pyodide/work43")\nprint(os.getcwd())',
-      expect: "/home/pyodide\n/home/pyodide/work43\n/home/pyodide",
+        'import os\nos.chdir("/home/pyodide")  # 最初の場所 /home/pyodide に戻しておく\nos.makedirs("work43/inner", exist_ok=True)\n\nprint(os.getcwd())\nos.chdir("work43/inner")\nprint(os.getcwd())\nos.chdir("..")\nprint(os.getcwd())',
+      expect: "/home/pyodide\n/home/pyodide/work43/inner\n/home/pyodide",
       mustInclude: ["getcwd", ".."],
-      hints: ["print(os.getcwd()) で今の場所を表示します。os.chdir(\"work43\") で1段下へ移動します。", "最後は os.chdir(\"..\") で1段上に戻ってから print(os.getcwd()) です。"],
+      hints: ["print(os.getcwd()) で今の場所を表示します。os.chdir(\"work43/inner\") で2段下へ移動します。", "最後は os.chdir(\"../..\") で2段上に戻ってから print(os.getcwd()) です。"],
       xp: 25,
     },
     {
