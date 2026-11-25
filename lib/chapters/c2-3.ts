@@ -95,8 +95,8 @@ export const chapter: Chapter = {
       wrong: "def is_triangle(a, b, c):\n    if a + b > c:\n        return True\n    else:\n        return False",
       expect: "True False False",
       test: "print(is_triangle(3, 4, 5), is_triangle(1, 2, 3), is_triangle(2, 9, 3))",
-      mustInclude: ["and", "if ("],
-      hints: ["調べる条件は a + b > c、b + c > a、c + a > b の3つで、すべて and でつなぎます。", "if ( のあとで改行し、続きの行を少し深く字下げすると読みやすくなります。最後は ): で閉じます。"],
+      mustInclude: ["and"],
+      hints: ["調べる条件は a + b > c、b + c > a、c + a > b の3つで、すべて and でつなぎます。", "if ( のあと（または return ( のあと）で改行し、続きの行を少し深く字下げすると読みやすくなります。最後は ): で閉じます。"],
       xp: 25,
     },
     {

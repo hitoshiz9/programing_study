@@ -906,7 +906,7 @@ const ALL: Omit<Lesson, "ref">[] = [
       "( ) で計算の順番を決めるのを忘れないようにしましょう。",
     ],
     example: "def triangle(base, height):\n    return base * height / 2",
-    task: "台形の面積を返す関数 trapezoid(top, bottom, height) を作ろう。関数を作って return すればよく、呼び出す print は書かなくてかまいません。",
+    task: "台形の面積（（上の辺 + 下の辺）× 高さ ÷ 2）を返す関数 trapezoid(top, bottom, height) を作ろう。関数を作って return すればよく、呼び出す print は書かなくてかまいません。",
     starter: "def trapezoid(top, bottom, height):\n    pass\n",
     solution: "def trapezoid(top, bottom, height):\n    return (top + bottom) * height / 2",
     wrong: "def trapezoid(top, bottom, height):\n    return top + bottom * height / 2",
@@ -924,7 +924,7 @@ const ALL: Omit<Lesson, "ref">[] = [
       "2点 (x1, y1) と (x2, y2) の距離は、√((x2 − x1)² + (y2 − y1)²) です。",
     ],
     example: "def square(x):\n    return x * x",
-    task: "square を使って、2点の距離を返す関数 distance(x1, y1, x2, y2) を完成させよう。関数を作って return すればよく、呼び出す print は書かなくてかまいません。",
+    task: "square を使って、2点の距離（x の差の2乗と y の差の2乗を足して、その平方根をとった数）を返す関数 distance(x1, y1, x2, y2) を完成させよう。関数を作って return すればよく、呼び出す print は書かなくてかまいません。",
     starter: "import math\n\ndef square(x):\n    return x * x\n\ndef distance(x1, y1, x2, y2):\n    pass\n",
     solution:
       "import math\n\ndef square(x):\n    return x * x\n\ndef distance(x1, y1, x2, y2):\n    return math.sqrt(square(x2 - x1) + square(y2 - y1))",
