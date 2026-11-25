@@ -4,7 +4,7 @@ import { CHAPTER_ORDER, MODULES } from "./chapters/index.ts";
 // ステージ「AI(機械学習)」: NumPy → pandas → scikit-learn の順。形式は「書く」と同じ。
 // 章は東大教材の 5-3 / 7-1 / 7-2。文章は独自。
 const PD_STARTER =
-  'import pandas as pd\n\ndf = pd.DataFrame({\n    "name": ["ぴよ", "ミケ", "ポチ", "タマ"],\n    "team": ["赤", "白", "赤", "白"],\n    "score": [80, 65, 90, 75],\n})\n';
+  'import pandas as pd\n\ndf = pd.DataFrame({\n    "name": ["ぴよ", "ミケ", "ポチ", "タマ"],\n    "team": ["red", "white", "red", "white"],\n    "score": [80, 65, 90, 75],\n})\n';
 const LR_STARTER =
   "from sklearn.linear_model import LinearRegression\n\n# 勉強した時間(X) と テストの点数(y)\nX = [[1], [2], [3], [4], [5]]\ny = [50, 60, 70, 80, 90]\n";
 const LR_FITTED = LR_STARTER + "\nmodel = LinearRegression()\nmodel.fit(X, y)\n";
@@ -125,7 +125,7 @@ const BASE_ML: Lesson[] = [
     starter: PD_STARTER,
     solution: PD_STARTER + 'print(df.groupby("team")["score"].mean().to_dict())',
     wrong: PD_STARTER + 'print(df.groupby("team")["score"].sum().to_dict())',
-    expect: "{'白': 70.0, '赤': 85.0}",
+    expect: "{'red': 85.0, 'white': 70.0}",
     mustInclude: ["groupby"],
     hints: ['df.groupby("team")["score"] で、チームごとの score になります。', "そのあと .mean().to_dict() を付けて print します。"],
     xp: 30,
@@ -175,7 +175,7 @@ const BASE_ML: Lesson[] = [
       "LinearRegression は「点数 = 傾き × 時間 + 切片」という直線を学習します。",
       "学習したあと、傾きは model.coef_[0]、切片は model.intercept_ で見られます。",
     ],
-    example: "print(round(3.14159, 1))  # 小数第1位まで",
+    example: "",
     task: "学習した傾きと切片を、round で小数第1位までにして、1行に並べて表示しよう。",
     starter: LR_FITTED,
     solution: LR_FITTED + "print(round(model.coef_[0], 1), round(model.intercept_, 1))",
@@ -214,7 +214,7 @@ const BASE_ML: Lesson[] = [
       "学習に使ったデータで正しさを測ると、答えを見てからテストを受けるのと同じで、高く出すぎます。",
       "そこで train_test_split で「学習用」と「テスト用」に分け、テスト用で model.score( ) を測ります（正解の割合）。",
     ],
-    example: "# score は 0〜1。1.0 なら全問正解です",
+    example: "",
     task: "学習用のデータ(X_train, y_train)で学習し、テスト用(X_test, y_test)の正解率を、小数第2位まで表示しよう。",
     starter: IRIS_STARTER,
     solution: IRIS_STARTER + "model.fit(X_train, y_train)\nprint(round(model.score(X_test, y_test), 2))",
