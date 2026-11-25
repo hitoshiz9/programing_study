@@ -1,6 +1,6 @@
 {
-  "name": "ぴよぴよ Python",
-  "short_name": "ぴよぴよPython",
+  "name": "Python学習",
+  "short_name": "Python学習",
   "description": "ブラウザで書いて動かす Python 入門",
   "start_url": "./",
   "scope": "./",

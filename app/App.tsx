@@ -82,7 +82,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-amber-50 text-stone-800">
       <header className="sticky top-0 z-10 flex flex-wrap items-center gap-4 border-b border-amber-200 bg-white/90 px-4 py-3 backdrop-blur">
-        <h1 className="text-lg font-bold">🐤 ぴよぴよ Python</h1>
+        <h1 className="text-lg font-bold">Python学習</h1>
         <div className="flex min-w-48 flex-1 items-center gap-2">
           <span className="rounded-full bg-amber-400 px-3 py-1 text-sm font-bold text-white">Lv {bar.level}</span>
           <div

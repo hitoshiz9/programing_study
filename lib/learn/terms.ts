@@ -24,16 +24,21 @@ export function termsOf(code: string): string[] {
   for (const m of c.matchAll(/\bfor\s+([\w, ]+?)\s+in\b/g)) for (const n of m[1].split(",")) own.add(n.trim());
   for (const m of c.matchAll(/\bas\s+(\w+)/g)) own.add(m[1]);
   for (const m of c.matchAll(/\blambda\s+([\w, ]*):/g)) for (const n of m[1].split(",")) own.add(n.trim());
+  // 問題の中で、文字列としてファイルに書いて作るモジュール(greet.py)と、その中の関数・クラスも自分で作った名前
+  for (const m of code.matchAll(/\b(\w+)\.py\b/g)) own.add(m[1]);
+  for (const m of code.matchAll(/\b(?:def|class)\s+(\w+)/g)) own.add(m[1]);
 
   for (const m of c.matchAll(/\b[A-Za-z_]\w*\b/g)) {
     const w = m[0];
     const before = c[m.index! - 1];
     const after = c.slice(m.index! + w.length).match(/^\s*(\(|=(?!=))?/)![1];
     if (KEYWORDS.has(w)) out.add(w);
-    else if (before === ".") out.add(w); // メソッドや部品の中身(math.sqrt の sqrt など)
+    else if (before === ".") {
+      if (!own.has(w)) out.add(w); // メソッドや部品の中身(math.sqrt の sqrt など)
+    }
     else if (after === "(" && !own.has(w)) out.add(w); // 関数
     else if (after === "=" && !own.has(w) && /[(,]\s*$/.test(c.slice(0, m.index))) out.add(w + "="); // 引数の名前(end= など)
-    else if (/\bimport\s+[\w, ]*$|\bfrom\s+$/.test(c.slice(0, m.index))) out.add(w); // 読みこむ部品の名前
+    else if (!own.has(w) && /\bimport\s+[\w, ]*$|\bfrom\s+$/.test(c.slice(0, m.index))) out.add(w); // 読みこむ部品の名前
   }
   let rest = c;
   for (const op of OPS) {
