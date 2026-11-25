@@ -27,6 +27,8 @@ test("教科書: 自動テストの道具が正しく言葉を取り出す", () 
   assert.ok(termsOf('print(1, end="")').includes("end="));
   assert.ok(!termsOf("def f(a):\n    return a\nprint(f(1))").includes("f"), "自分で作った関数は説明不要");
   assert.ok(!termsOf('print("a // b")').includes("//"), "文字列の中は対象外");
+  const mod = termsOf('f = open("greet.py", "w")\nf.write("def hello():\\n    return 1\\n")\nf.close()\nimport greet\nprint(greet.hello())');
+  assert.ok(!mod.includes("greet") && !mod.includes("hello") && mod.includes("open") && mod.includes("import"), "自分で作ったモジュールと関数は説明不要");
   assert.ok(mentions("/ は小数の答え", "/") && !mentions("// は商", "/"));
   assert.ok(!mentions("print する", "in"));
 });
