@@ -19,7 +19,8 @@ const READ = new Map(READ_LESSONS.map((l) => [l.id, l]));
 const problems = (s: Section) => s.blocks.flatMap((b) => ("try" in b ? [b.try] : []));
 const codeOf = (id: string) => {
   const w = WRITE.get(id);
-  return w ? [w.example, w.starter, w.solution].join("\n") : (READ.get(id)?.code ?? "");
+  // 書く問題は、画面に出る最初のコードと、正解のコード(お手本の example は画面に出ないので対象外)
+  return w ? [w.starter, w.solution].join("\n") : (READ.get(id)?.code ?? "");
 };
 
 test("教科書: 自動テストの道具が正しく言葉を取り出す", () => {
